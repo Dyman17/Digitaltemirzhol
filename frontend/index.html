@@ -15,49 +15,67 @@
 
   <main class="main-container" style="max-width: 1360px;">
 
-    <!-- Guest Welcome Gateway (shown if not logged in) -->
+    <!-- Guest landing: what the system is + where to go (shown if not logged in) -->
     <div id="guestWelcomeBanner" class="glass-card highlight" style="display:none; margin-bottom: 24px; border-left: 4px solid var(--primary);">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
         <div>
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <span class="badge badge-blue">ҚТЖ ІШКІ КОРПОРАТИВТІК ЖЕЛІСІ</span>
-            <span style="font-size:12px; color:var(--text-muted);">Digital Temirzhol Network</span>
-          </div>
           <h2 style="font-size:22px; font-weight:800; color:var(--text-main); margin-bottom:6px;">
-            Қазақстан Темір Жолының ішкі бірыңғай желісіне қош келдіңіз
+            Қазақстан Темір Жолының ішкі жүйесі
           </h2>
           <p style="color:var(--text-muted); font-size:13.5px; max-width:760px; line-height:1.5;">
-            Бұл жүйеде бөлек парақшаларға ашық өту мүмкін емес — барлығы қызметкердің жеке рөлі мен бөлімі (имя части) арқылы реттеледі. Жүйеге кіріп немесе тіркеліп, желідегі өз қызметтік орныңызға қол жеткізіңіз.
+            Фототіркеу, табель, больничныйлар және цифрлық наряд-допуск №451 — бәрі рөліңізге қарай ашылады. Жүйеге кіріңіз немесе тіркеліңіз.
           </p>
         </div>
         <div style="display:flex; gap:10px;">
           <a href="login.html" class="btn btn-secondary" style="font-size:14px; padding:10px 18px;">
-            Жүйеге кіру (Вход)
+            Кіру
           </a>
           <a href="register.html" class="btn btn-primary" style="font-size:14px; padding:10px 18px;">
-            Тіркелу ➔
+            Тіркелу
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Authenticated Quick Status Banner (shown when logged in) -->
-    <div id="authWelcomeBanner" class="glass-card highlight" style="display:none; margin-bottom: 20px; border-left: 4px solid var(--accent-cyan); background: linear-gradient(135deg, rgba(240, 249, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);">
+    <!-- Guest role cards (shown if not logged in) -->
+    <div id="guestLanding" style="display:none;">
+      <div class="grid-2" style="margin-bottom:20px;">
+        <a href="checkin.html" class="glass-card" style="text-decoration:none; display:block;">
+          <h3 style="font-size:16px; margin-bottom:4px;">Өткізу бекеті</h3>
+          <p style="font-size:13px; color:var(--text-muted);">QR + фото: келдім / кеттім. Тіркеусіз өтуге болады.</p>
+        </a>
+        <a href="kiosk.html" class="glass-card" style="text-decoration:none; display:block;">
+          <h3 style="font-size:16px; margin-bottom:4px;">Киоск экраны</h3>
+          <p style="font-size:13px; color:var(--text-muted);">Кіреберістегі планшетке арналған тірі QR-код.</p>
+        </a>
+      </div>
+      <div class="glass-card" style="margin-bottom:20px;">
+        <h3 style="font-size:16px; margin-bottom:10px;">Жеке кабинеттер — рөл бойынша</h3>
+        <div class="grid-4">
+          <a href="login.html" class="btn btn-secondary">Бастық</a>
+          <a href="login.html" class="btn btn-secondary">Диспетчер</a>
+          <a href="login.html" class="btn btn-secondary">Жол шебері</a>
+          <a href="login.html" class="btn btn-secondary">Жұмысшы</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authenticated status banner (shown when logged in) -->
+    <div id="authWelcomeBanner" class="glass-card" style="display:none; margin-bottom: 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
         <div style="display:flex; align-items:center; gap:14px;">
-          <img id="welcomeBannerAvatar" src="" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-cyan); display:none;">
+          <img id="welcomeBannerAvatar" src="" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--border-strong); display:none;">
           <div>
-            <div style="font-size:11.5px; color:var(--accent-cyan); font-weight:700; text-transform:uppercase;" id="welcomeBannerRoleTag">ЖҰМЫС ОРНЫ</div>
             <h2 style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:2px;" id="welcomeBannerGreeting">Қош келдіңіз!</h2>
             <div style="font-size:12.5px; color:var(--text-muted);" id="welcomeBannerOrgTag">ПЧ-13 • Участок №3</div>
           </div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" onclick="switchNetworkTab('service')" id="btnGoToRolePanel">
-            🛠️ Менің қызметтік панелім ➔
+            Менің панелім
           </button>
           <button class="btn btn-success btn-sm" onclick="switchNetworkTab('checkin')">
-            📸 Фото-чекин
+            Фото-чекин
           </button>
         </div>
       </div>
@@ -89,47 +107,37 @@
         </div>
 
         <!-- Guest Authorization Card (shown if not logged in) -->
-        <div id="sidebarGuestCard" class="network-user-card" style="display: block; text-align: center; border-top: 3px solid var(--primary);">
-          <div style="width: 54px; height: 54px; border-radius: 50%; background: #eff6ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px;">
-            🚆
-          </div>
-          <span class="badge badge-blue" style="margin-bottom: 6px;">ҚОНАҚ РЕЖИМІ</span>
+        <div id="sidebarGuestCard" class="network-user-card" style="display: block; text-align: center;">
           <h3 style="font-size: 14.5px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Жүйеге кіру қажет</h3>
           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
-            Наряд-допуск рәсімдеу, ауысым табелі және әріптестермен жеке чатқа кіру үшін аккаунтыңызбен кіріңіз.
+            Табель, нарядтар және чат — аккаунтпен кіріңіз.
           </p>
           <a href="login.html" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 8px;">
-            Жүйеге кіру (Вход) ➔
+            Кіру
           </a>
           <a href="register.html" class="btn btn-secondary btn-sm" style="width: 100%;">
-            Тіркелу (Регистрация)
+            Тіркелу
           </a>
         </div>
 
-        <!-- Social Network Navigation Menu -->
+        <!-- Navigation -->
         <nav class="network-nav-menu">
           <button class="network-nav-item active" onclick="switchNetworkTab('feed')" id="navTab-feed">
-            🌐 <span>Өндірістік лента (Лента)</span>
+            <span>Лента</span>
           </button>
           <button class="network-nav-item" onclick="switchNetworkTab('colleagues')" id="navTab-colleagues">
-            👥 <span>Теміржолшылар желісі (Коллеги)</span>
+            <span>Әріптестер</span>
           </button>
           <button class="network-nav-item" onclick="switchNetworkTab('service')" id="navTab-service">
-            🛠️ <span>Менің қызметтік панелім</span>
+            <span>Қызметтік панель</span>
           </button>
           <button class="network-nav-item" onclick="switchNetworkTab('checkin')" id="navTab-checkin">
-            📸 <span>КПП Фото-чекин бекеті</span>
+            <span>Фото-чекин</span>
           </button>
           <button class="network-nav-item" onclick="openPrintRoster()">
-            📄 <span>Басып шығару (Печать)</span>
+            <span>Басып шығару</span>
           </button>
         </nav>
-
-        <!-- Safety Notice Card -->
-        <div class="glass-card" style="margin-top: 16px; padding: 14px; font-size: 12px; color: var(--text-muted);">
-          <strong style="color:var(--text-main); display:block; margin-bottom:4px;">⚠️ ТБ және ПТЭ қағидасы:</strong>
-          Жолда жұмыс істеу тек наряд бекітіліп, диспетчер рұқсат бергенде ғана басталады.
-        </div>
 
       </aside>
 
@@ -138,46 +146,11 @@
 
         <!-- 1. FEED TAB -->
         <div id="tabContent-feed">
-          
-          <!-- Super Clear Big Quick Action Cards for Any User -->
-          <div class="glass-card" style="margin-bottom: 20px; padding: 16px; background: #ffffff; border: 1px solid var(--border-color);">
-            <div style="font-size:11.5px; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;">
-              ⚡ Негізгі жылдам әрекеттер (Быстрые действия)
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-              <button class="btn btn-success" onclick="switchNetworkTab('checkin')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                📸 Жұмысқа келдім / кеттім
-              </button>
-              <button class="btn btn-primary" onclick="switchNetworkTab('colleagues')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                👥 Әріптестерді табу & Чат (ЛС)
-              </button>
-              <button class="btn btn-secondary" onclick="switchNetworkTab('service')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                🛠️ Менің қызметтік панелім
-              </button>
-              <button class="btn btn-secondary" onclick="openPrintRoster()" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                📄 Ведомості басып шығару
-              </button>
-            </div>
-          </div>
-
-          <!-- Announcement Banner -->
-          <div class="glass-card highlight" style="margin-bottom: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="badge badge-green">ҚТЖ ЖЕЛІЛІК ӨНДІРІС ТАҚТАСЫ</span>
-              <span style="font-size:12px; color:var(--text-muted);" id="feedCurrentDate">Бүгін</span>
-            </div>
-            <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
-              Жедел өндірістік қатысу және ауысым жаңалықтары
-            </h3>
-            <p style="font-size: 13px; color: var(--text-muted);">
-              Барлық бөлімшелер мен околотоктар бойынша нақты уақыттағы келу-кету оқиғалары.
-            </p>
-          </div>
 
           <!-- Live Checkins Stream (collapsible to save space) -->
           <div class="glass-card" style="margin-bottom: 20px;">
             <div class="card-header" style="cursor:pointer;" onclick="toggleLiveFeed()">
-              <h3 style="font-size: 15px;">Өткізу бекетінен тікелей фото-ағын (КПП Фото-чекин)</h3>
+              <h3 style="font-size: 15px;">Фото-ағын (КПП)</h3>
               <span style="display:flex; gap:8px; align-items:center;">
                 <span class="badge badge-blue" id="liveFeedCount" style="display:none;">0</span>
                 <button class="btn btn-secondary btn-sm" id="liveFeedToggleBtn" onclick="event.stopPropagation(); toggleLiveFeed()">Ашу ▾</button>
@@ -197,10 +170,7 @@
           <div class="glass-card" style="margin-bottom: 20px;">
             <div class="card-header" style="flex-wrap:wrap; gap:10px;">
               <div>
-                <h3 style="font-size: 16px;">ҚТЖ Қызметкерлер каталогы және Жеке чат</h3>
-                <p style="font-size: 12px; color: var(--text-muted);">
-                  Кез келген әріптесіңізді тауып, бөлімін көріңіз және жеке хабарлама (ЛС) жазыңыз.
-                </p>
+                <h3 style="font-size: 16px;">Әріптестер</h3>
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
                 <input type="text" id="networkSearchInput" class="form-control" placeholder="Аты-жөні немесе бөлімі..." style="min-width:240px;" oninput="filterColleagues(this.value)">
@@ -231,12 +201,8 @@
 
         <!-- 3. ROLE-SPECIFIC SERVICE PANEL TAB -->
         <div id="tabContent-service" style="display:none;">
-          
-          <div class="glass-card highlight" style="margin-bottom: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span class="badge badge-purple" id="servicePanelRoleBadge">ҚЫЗМЕТТІК ПАНЕЛЬ</span>
-              <span style="font-size:12px; color:var(--text-muted);">Рөл бойынша шектелген қолжетімділік</span>
-            </div>
+
+          <div class="glass-card" style="margin-bottom: 20px;">
             <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main);" id="servicePanelTitle">
               Менің қызметтік міндеттерім
             </h3>
@@ -292,45 +258,20 @@
 
       </section>
 
-      <!-- ================= RIGHT SIDEBAR: QUICK DUTY & ACTIONS ================= -->
+      <!-- ================= RIGHT SIDEBAR ================= -->
       <aside class="network-right-sidebar">
-        
-        <!-- Duty Dispatcher Widget -->
-        <div class="glass-card" style="margin-bottom: 16px;">
-          <div class="card-header" style="margin-bottom: 8px;">
-            <h4 style="font-size: 13.5px; font-weight: 700;">Кезекші Диспетчер (ДНЦ)</h4>
-            <span class="badge badge-green" style="font-size:10px;">БАЙЛАНЫСТА</span>
-          </div>
-          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">
-            Поезд қозғалысын реттеу және «Технологиялық терезе» орталығы.
-          </div>
-          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openQuickChatWithRole('DISPATCHER')">
-            Диспетчерге жазу (ЛС)
-          </button>
-        </div>
 
-        <!-- Management Hotline Widget -->
+        <!-- Contacts in one card -->
         <div class="glass-card" style="margin-bottom: 16px;">
-          <div class="card-header" style="margin-bottom: 8px;">
-            <h4 style="font-size: 13.5px; font-weight: 700;">ПЧ Басшылығы (Директор)</h4>
-            <span class="badge badge-blue" style="font-size:10px;">БАСҚАРУ</span>
-          </div>
-          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">
-            Өндірістік сұрақтар мен бұйрықтарды бекіту.
-          </div>
-          <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="openQuickChatWithRole('BOSS')">
-            Бастыққа жазу (ЛС)
+          <h4 style="font-size: 13.5px; font-weight: 700; margin-bottom: 10px;">Байланыс</h4>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-bottom:8px;" onclick="openQuickChatWithRole('DISPATCHER')">
+            Диспетчерге жазу
           </button>
-        </div>
-
-        <!-- Shift Attendance Sheet Print Widget -->
-        <div class="glass-card" style="margin-bottom: 16px;">
-          <h4 style="font-size: 13.5px; font-weight: 700; margin-bottom: 6px;">Ауысым Табелі (Печать)</h4>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Бүгінгі күннің ресми қатысу ведомосін қағазға шығару.
-          </p>
-          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openPrintRoster()">
-            Басып шығару парағы ➔
+          <button class="btn btn-secondary btn-sm" style="width:100%; margin-bottom:8px;" onclick="openQuickChatWithRole('BOSS')">
+            Бастыққа жазу
+          </button>
+          <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="openPrintRoster()">
+            Табельді басып шығару
           </button>
         </div>
 
@@ -372,17 +313,20 @@
       // Navbar (auth capsule / guest links) is rendered by js/layout.js.
       const authBanner = document.getElementById("authWelcomeBanner");
       const welcome = document.getElementById("guestWelcomeBanner");
+      const landing = document.getElementById("guestLanding");
+      const layout = document.getElementById("networkLayout");
       const sidebarUser = document.getElementById("sidebarUserCard");
       const sidebarGuest = document.getElementById("sidebarGuestCard");
 
       if (currentUser) {
         if (welcome) welcome.style.display = "none";
+        if (landing) landing.style.display = "none";
+        if (layout) layout.style.display = "grid";
         if (sidebarUser) sidebarUser.style.display = "block";
         if (sidebarGuest) sidebarGuest.style.display = "none";
 
         if (authBanner) {
           authBanner.style.display = "block";
-          document.getElementById("welcomeBannerRoleTag").innerText = formatRoleName(currentUser.role).toUpperCase();
           document.getElementById("welcomeBannerGreeting").innerText = `Сәлеметсіз бе, ${currentUser.full_name}!`;
           document.getElementById("welcomeBannerOrgTag").innerText = `${currentUser.organization || 'ПЧ-13'} • ${currentUser.subdivision || 'Участок №3'} • Табель: ${currentUser.emp_num || '—'}`;
           if (currentUser.photo_url) {
@@ -409,6 +353,8 @@
       } else {
         if (authBanner) authBanner.style.display = "none";
         if (welcome) welcome.style.display = "block";
+        if (landing) landing.style.display = "block";
+        if (layout) layout.style.display = "none";
         if (sidebarUser) sidebarUser.style.display = "none";
         if (sidebarGuest) sidebarGuest.style.display = "block";
       }
@@ -570,7 +516,7 @@
             <div style="display:flex; align-items:center; gap:10px;">
               ${statusBadge}
               <button class="btn btn-primary btn-sm" onclick="openChatWith(${u.id}, '${escapeJs(u.full_name)}', '${escapeJs(u.role)}')">
-                Чат (ЛС)
+                Чат
               </button>
             </div>
           </div>
@@ -584,13 +530,12 @@
       if (!currentUser) {
         container.innerHTML = `
           <div class="glass-card" style="text-align:center; padding:36px 20px;">
-            <div style="font-size:32px; margin-bottom:8px;">🔒</div>
             <h3 style="font-size:17px; font-weight:800; color:var(--text-main); margin-bottom:6px;">Қызметтік панель жабық</h3>
             <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto 16px;">
               Бұл бөлім қызметкердің лауазымына (ПЧ Бастығы, Диспетчер, Жол шебері, Жұмысшы) сәйкес арнайы өндірістік құралдарды ашады.
             </p>
             <div style="display:flex; justify-content:center; gap:10px;">
-              <a href="login.html" class="btn btn-primary">Жүйеге кіру (Вход) ➔</a>
+              <a href="login.html" class="btn btn-primary">Жүйеге кіру</a>
               <a href="register.html" class="btn btn-secondary">Тіркелу</a>
             </div>
           </div>
@@ -599,7 +544,6 @@
       }
 
       const role = currentUser.role;
-      document.getElementById("servicePanelRoleBadge").innerText = formatRoleName(role).toUpperCase();
 
       if (role === "WORKER") {
         document.getElementById("servicePanelTitle").innerText = "Жұмысшының жеке қызметтік панелі";
@@ -623,7 +567,7 @@
               <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
                 Емханадан алынған анықтаманы фото/скриншот түрінде жүктеп, Бастыққа бекітуге жіберіңіз.
               </p>
-              <a href="worker.html" class="btn btn-primary">Больничный өтінішін ашу ➔</a>
+              <a href="worker.html" class="btn btn-primary">Больничный өтінішін ашу</a>
             </div>
           </div>
         `;
@@ -639,7 +583,7 @@
               <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
                 Қарамағыңыздағы жұмысшылардың қатысуы, келген-кеткен уақыты мен фотосы.
               </p>
-              <a href="master.html" class="btn btn-primary">Бригаданы басқару және Наряд толтыру ➔</a>
+              <a href="master.html" class="btn btn-primary">Бригаданы басқару және Наряд толтыру</a>
             </div>
 
             <div class="glass-card">
@@ -649,7 +593,7 @@
               <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
                 Наряд пен өндірістік жұмыстар бойынша ПЧ Бастығымен личкаға хат алмасу.
               </p>
-              <button class="btn btn-secondary" onclick="openQuickChatWithRole('BOSS')">Бастыққа жазу (ЛС)</button>
+              <button class="btn btn-secondary" onclick="openQuickChatWithRole('BOSS')">Бастыққа жазу</button>
             </div>
           </div>
         `;
@@ -665,7 +609,7 @@
               <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
                 Жол шеберлері жолдаған №451 наряд-допусктарға цифрлық қол қою және жұмысшылардың емхана қағаздарын растау.
               </p>
-              <a href="boss.html" class="btn btn-primary">Басқару кабинетіне кіру ➔</a>
+              <a href="boss.html" class="btn btn-primary">Басқару кабинетіне кіру</a>
             </div>
 
             <div class="glass-card">
@@ -690,7 +634,7 @@
             <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
               Бастық бекіткен нарядтарды тексеріп, поезд қозғалысын реттеу арқылы бригадаға жұмыс бастауға рұқсат беріңіз.
             </p>
-            <a href="dispatcher.html" class="btn btn-primary">Диспетчерлік Басқару Орталығына өту ➔</a>
+            <a href="dispatcher.html" class="btn btn-primary">Диспетчерлік орталыққа өту</a>
           </div>
         `;
       }
