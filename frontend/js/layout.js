@@ -1,6 +1,6 @@
 // Digital Temirzhol — shared navbar, one for all pages.
 // Page config (optional, before this script):
-//   window.PAGE = { section: "home|checkin|kiosk|login|register|cabinet", badge, title, sub }
+//   window.PAGE = { section: "home|checkin|login|register|cabinet", badge, title, sub }
 // Loaded AFTER js/api.js. Re-renders on language change.
 
 const CABINET_BY_ROLE = {
@@ -36,7 +36,6 @@ function renderNavbar() {
   const page = window.PAGE || {};
   const path = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
   const section = page.section || (path.includes("checkin") ? "checkin"
-    : path.includes("kiosk") ? "kiosk"
     : path.includes("login") ? "login"
     : path.includes("register") ? "register"
     : (path.includes("boss") || path.includes("master") || path.includes("dispatcher") || path.includes("worker")) ? "cabinet"
@@ -55,7 +54,6 @@ function renderNavbar() {
   let right = `<button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык"></button>`;
   right += link("index.html", "Басты бет", "home");
   right += link("checkin.html", "Фото-чекин", "checkin");
-  right += link("kiosk.html", "Киоск", "kiosk");
 
   if (user) {
     const cabinet = CABINET_BY_ROLE[user.role] || "index.html";

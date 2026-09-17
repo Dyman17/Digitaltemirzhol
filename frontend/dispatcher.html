@@ -280,18 +280,36 @@
       const badge = p.is_active
         ? `<span class="badge badge-green">БЕЛСЕНДІ</span>`
         : `<span class="badge badge-gray">ӨШІРУЛІ</span>`;
+      // Paper-QR link: print it and stick it at the entrance
+      const qrUrl = p.kind === "checkpoint"
+        ? window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/") + 1) + "checkin.html?c=" + p.id
+        : "";
       return `
-        <div style="display:flex; align-items:center; gap:10px; background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;">
-          <div style="flex:1;">
-            <div style="font-weight:700; font-size:13.5px;">${escapeHtml(p.name)}</div>
-            ${p.location ? `<div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(p.location)}</div>` : ""}
+        <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:13.5px;">${escapeHtml(p.name)}</div>
+              ${p.location ? `<div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(p.location)}</div>` : ""}
+            </div>
+            ${badge}
+            <button class="btn btn-secondary btn-sm" onclick="toggleWorkPoint(${p.id}, ${p.is_active ? "false" : "true"})">
+              ${p.is_active ? "Өшіру" : "Қосу"}
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="deleteWorkPoint(${p.id})" title="Жою">✕</button>
           </div>
-          ${badge}
-          <button class="btn btn-secondary btn-sm" onclick="toggleWorkPoint(${p.id}, ${p.is_active ? "false" : "true"})">
-            ${p.is_active ? "Өшіру" : "Қосу"}
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="deleteWorkPoint(${p.id})" title="Жою">✕</button>
+          ${qrUrl ? `
+          <div style="display:flex; gap:8px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border-color);">
+            <input type="text" class="form-control" readonly value="${qrUrl}" onclick="this.select()" style="font-size:11.5px; font-family:var(--font-mono);">
+            <button class="btn btn-primary btn-sm" style="white-space:nowrap;" onclick="copyQrLink('${qrUrl}')">Көшіру (печать үшін)</button>
+          </div>` : ""}
         </div>`;
+    }
+
+    function copyQrLink(url) {
+      navigator.clipboard.writeText(url).then(
+        () => showToast("Сілтеме көшірілді — QR жасап, қағазға басып шығарыңыз", "success"),
+        () => showToast("Көшіру сәтсіз: сілтемені қолмен белгілеңіз", "warning")
+      );
     }
 
     async function handleAddWorkPoint(e) {
