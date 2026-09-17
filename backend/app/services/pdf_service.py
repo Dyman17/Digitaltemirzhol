@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import datetime
+from app.core.timeutils import now_local
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
@@ -63,7 +63,7 @@ def create_facsimile_signature(name: str, target_path: Path, role: str = "ПЧ")
     draw.rounded_rectangle([(10, 10), (310, 90)], radius=12, outline=ink_color, width=2)
     draw.text((25, 20), f"ҚТЖ • {role} ЭЛЕКТРОНДЫ ҚОЛЫ", fill=ink_color)
     draw.text((25, 42), f"{name}", fill=ink_color)
-    draw.text((25, 66), f"Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}", fill=ink_color)
+    draw.text((25, 66), f"Дата: {now_local().strftime('%d.%m.%Y %H:%M')}", fill=ink_color)
     
     target_path.parent.mkdir(parents=True, exist_ok=True)
     img.save(target_path, "PNG")
@@ -227,7 +227,7 @@ def generate_naryad_pdf(naryad, db) -> str:
     elements.append(Spacer(1, 0.2 * cm))
 
     boss_stamp_desc = f"<b>БЕКІТТІ (Бастық):</b><br/>{boss_name}<br/>Мәртебесі: ҚОЛ ҚОЙЫЛҒАН<br/>Дата: {naryad.created_at.strftime('%d.%m.%Y %H:%M')}"
-    disp_stamp_desc = f"<b>РҰҚСАТ БЕРДІ (Диспетчер):</b><br/>{disp_name}<br/>«Технологиялық терезе» берілді<br/>Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+    disp_stamp_desc = f"<b>РҰҚСАТ БЕРДІ (Диспетчер):</b><br/>{disp_name}<br/>«Технологиялық терезе» берілді<br/>Дата: {now_local().strftime('%d.%m.%Y %H:%M')}"
     master_stamp_desc = f"<b>ЖҰМЫСТЫ ТАПСЫРДЫ (Мастер):</b><br/>{master_name}<br/>Жұмыс аяқталды, жол бос.<br/>Уақыт: {naryad.actual_end or '16:30'}"
 
     def approval_cell(desc: str, sig_url: str | None):

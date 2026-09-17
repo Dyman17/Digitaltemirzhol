@@ -5,6 +5,7 @@ from typing import Optional
 
 from app.core.database import get_db
 from app.core.security import get_current_user_optional
+from app.core.timeutils import now_local, today_start_local
 from app.models.models import Attendance, User, Notification, Leave
 from app.schemas.schemas import AttendanceCheckIn
 from app.services.excel_service import generate_timesheet_csv
@@ -73,7 +74,7 @@ def record_attendance(
         except Exception as e:
             print(f"Photo save error: {e}")
 
-    now = datetime.now()
+    now = now_local()  # Almaty wall time, not server UTC
     action_kz = "жұмысқа келді" if data.action_type == "CHECK_IN" else "жұмыстан кетті"
     time_str = now.strftime("%H:%M")
 
@@ -268,9 +269,9 @@ def get_roster(
     Dispatcher/Boss gets all employees or filtered.
     Master gets his subordinates (or all workers if master_id not specified).
     """
-    # NOTE: Attendance timestamps are stored with datetime.now() (server local time),
-    # so "today" must be computed the same way — not with utcnow().
-    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # NOTE: attendance is stored in Almaty wall time (see core.timeutils) —
+    # "today" must use the same basis, never server UTC.
+    today_start = today_start_local()
     today_str = date.today().strftime("%Y-%m-%d")
 
     q = db.query(User)

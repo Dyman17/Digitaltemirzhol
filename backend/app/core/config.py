@@ -42,6 +42,11 @@ DEMO_SHOW_RESET_CODE = os.getenv("DEMO_SHOW_RESET_CODE", "true").lower() in ("1"
 # Dynamic QR lifetime in seconds (entrance-screen token rotation window)
 KIOSK_TOKEN_TTL = int(os.getenv("KIOSK_TOKEN_TTL", "30"))
 
+# Wall-clock timezone for everything users see (check-ins, chat, PDFs).
+# Kazakhstan is UTC+5 nationwide (Asia/Almaty). Servers run UTC — without this
+# the timesheet would be 5-6 hours off in production.
+APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Almaty")
+
 # Outgoing mail for password reset (plain SMTP via stdlib; any provider works).
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from app.core.database import get_db
 from app.core.security import get_current_user_optional
+from app.core.timeutils import now_local, today_start_local
 from app.models.models import ChatMessage, User, Attendance
 from app.schemas.schemas import ChatMessageCreate
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 def prune_expired_messages(db: Session):
     """Clean up chat messages older than 1 hour to keep DB clean."""
-    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = now_local() - timedelta(hours=1)
     deleted = db.query(ChatMessage).filter(ChatMessage.created_at < one_hour_ago).delete()
     if deleted > 0:
         db.commit()
@@ -41,7 +42,7 @@ def send_message(
         sender_id=sender.id,
         receiver_id=receiver.id,
         text=data.text.strip(),
-        created_at=datetime.utcnow()
+        created_at=now_local()
     )
     db.add(msg)
     db.commit()
@@ -115,8 +116,8 @@ def get_chat_users(
         q = q.filter(User.role == role)
 
     users = q.order_by(User.full_name.asc()).all()
-    # Same time basis as stored Attendance timestamps (datetime.now, server local)
-    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Same Almaty-wall basis as stored Attendance timestamps
+    today_start = today_start_local()
 
     results = []
     seen_names = set()

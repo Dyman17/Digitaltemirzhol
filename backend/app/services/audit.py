@@ -1,5 +1,5 @@
 """Unified audit journal helper."""
-from datetime import datetime
+from app.core.timeutils import now_local
 from app.models.models import AuditLog
 
 # Action codes (stable, used by the frontend filter)
@@ -30,7 +30,7 @@ def log_event(db, actor, action: str, entity: str = "", entity_id=None, detail: 
             entity=entity or None,
             entity_id=entity_id,
             detail=(detail or "")[:255],
-            created_at=datetime.utcnow(),
+            created_at=now_local(),
         ))
         db.commit()
     except Exception as e:

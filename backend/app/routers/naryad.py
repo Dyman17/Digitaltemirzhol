@@ -8,6 +8,7 @@ import json
 
 from app.core.database import get_db
 from app.core.security import get_current_user_optional, require_roles
+from app.core.timeutils import now_local
 from app.models.models import Naryad, NaryadBrigade, User, Notification
 from app.schemas.schemas import NaryadCreate, NaryadApproveBoss, NaryadPermitDispatcher, NaryadComplete
 from app.services.pdf_service import generate_naryad_pdf
@@ -214,7 +215,7 @@ def complete_naryad(
 
     naryad.status = "COMPLETED"
     naryad.actual_end = data.actual_end_time
-    naryad.closed_at = datetime.utcnow()
+    naryad.closed_at = now_local()
 
     # Generate official signed PDF
     pdf_url = generate_naryad_pdf(naryad, db)

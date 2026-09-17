@@ -5,6 +5,7 @@ from typing import Optional
 
 from app.core.database import get_db
 from app.core.security import get_current_user_optional, require_roles
+from app.core.timeutils import now_local
 from app.models.models import Leave, User, Notification
 from app.schemas.schemas import LeaveCreate, LeaveApprove
 from app.services.face_service import save_base64_image
@@ -109,7 +110,7 @@ def approve_leave(
 
     leave.status = data.status
     leave.approved_by_id = boss.id
-    leave.approved_at = datetime.utcnow()
+    leave.approved_at = now_local()
     # The boss's board signature is stamped on approved applications
     if data.status == "APPROVED":
         leave.boss_signature_url = resolve_signature(boss, "Бастық")
