@@ -40,7 +40,7 @@
     <!-- Guest role cards (shown if not logged in) -->
     <div id="guestLanding" style="display:none;">
       <div class="grid-2" style="margin-bottom:20px;">
-        <a href="checkin.html" class="glass-card" style="text-decoration:none; display:block;">
+        <a href="go.html" class="glass-card" style="text-decoration:none; display:block;">
           <h3 style="font-size:16px; margin-bottom:4px;">Өткізу бекеті</h3>
           <p style="font-size:13px; color:var(--text-muted);">Кіреберістегі QR-ды сканерлеңіз: фото + «келдім / кеттім». Тіркеусіз өтуге болады.</p>
         </a>
@@ -150,7 +150,7 @@
           <!-- Live Checkins Stream (collapsible to save space) -->
           <div class="glass-card" style="margin-bottom: 20px;">
             <div class="card-header" style="cursor:pointer;" onclick="toggleLiveFeed()">
-              <h3 style="font-size: 15px;">Фото-ағын (КПП)</h3>
+              <h3 style="font-size: 15px; display:flex; align-items:center; gap:8px;"><span class="live-dot"></span>Фото-ағын (КПП)</h3>
               <span style="display:flex; gap:8px; align-items:center;">
                 <span class="badge badge-blue" id="liveFeedCount" style="display:none;">0</span>
                 <button class="btn btn-secondary btn-sm" id="liveFeedToggleBtn" onclick="event.stopPropagation(); toggleLiveFeed()">Ашу ▾</button>

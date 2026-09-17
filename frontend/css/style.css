@@ -4,7 +4,7 @@
    Supports Kazakh Cyrillic (ә, ғ, қ, ң, ө, ұ, ү, һ, і) & Russian Cyrillic
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=Russo+One&display=swap');
 
 :root {
   /* Fonts with native Cyrillic & Cyrillic Extended support */
@@ -57,6 +57,14 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 9999px;
+
+  /* Railway brand layer */
+  --font-display: 'Russo One', 'Inter', sans-serif;
+  --ink: #161616;
+  --rail: #ffc400;
+  --rail-dark: #e0a800;
+  --go: #1b7a3d;
+  --stop: #c8191b;
 }
 
 * {
@@ -752,6 +760,186 @@ tr:hover td {
   .stat-val {
     font-size: 20px;
   }
+}
+
+/* ==========================================================================
+   RAILWAY BRAND LAYER — hard industrial look, no AI slop
+   Signal yellow + ink black + stencil type. Applied last, wins ties.
+   ========================================================================== */
+
+/* Hazard stripe utility */
+.rail-stripe {
+  height: 8px;
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 14px, var(--rail) 14px 28px);
+}
+
+/* Navbar: ink underline + stripe */
+.navbar {
+  border-bottom: 3px solid var(--ink);
+  position: sticky;
+}
+.navbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 4px;
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 14px, var(--rail) 14px 28px);
+}
+
+.brand-badge {
+  background: var(--rail);
+  color: var(--ink);
+  font-family: var(--font-display);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  letter-spacing: 1px;
+}
+
+.brand-info h1 {
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+}
+
+/* Hard buttons */
+.btn {
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.btn:disabled {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+.btn-primary {
+  background: var(--rail);
+  color: var(--ink);
+}
+.btn-primary:hover {
+  background: var(--rail-dark);
+  color: var(--ink);
+}
+
+.btn-success {
+  background: var(--go);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+.btn-danger {
+  background: var(--stop);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
+/* Cards: hard frame */
+.card, .glass-card {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 rgba(22, 22, 22, 0.9);
+}
+.network-user-card, .colleague-card, .activity-feed-item {
+  border: 2px solid var(--ink);
+}
+
+/* Badges: stencil plates */
+.badge {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* Inputs: hard frames */
+.form-control {
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+}
+.form-control:focus {
+  outline: 3px solid var(--rail);
+  outline-offset: 0;
+  border-color: var(--ink);
+}
+
+/* Tables header: ink plate */
+.custom-table thead th {
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+  background: var(--ink);
+  color: var(--rail);
+  border: none;
+  font-size: 12px;
+}
+
+/* Live dot blink */
+@keyframes rail-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.live-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--stop);
+  border: 2px solid var(--ink);
+  animation: rail-blink 1.2s infinite;
+}
+
+/* Camera scanline (go.html) */
+@keyframes rail-scan {
+  0% { top: 0; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0; }
+}
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--rail);
+  box-shadow: 0 0 12px var(--rail);
+  animation: rail-scan 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Entrance animation for cards */
+@keyframes rail-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.card, .glass-card {
+  animation: rail-in 0.25s ease;
+}
+
+/* Ticker tape for the live feed header */
+@keyframes rail-ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ticker > span {
+  display: inline-block;
+  padding-right: 48px;
+  animation: rail-ticker 18s linear infinite;
 }
 
 

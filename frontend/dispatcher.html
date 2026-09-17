@@ -280,9 +280,9 @@
       const badge = p.is_active
         ? `<span class="badge badge-green">БЕЛСЕНДІ</span>`
         : `<span class="badge badge-gray">ӨШІРУЛІ</span>`;
-      // Paper-QR link: print it and stick it at the entrance
+      // Paper-QR link: print it and stick it at the entrance (go.html = check-in only)
       const qrUrl = p.kind === "checkpoint"
-        ? window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/") + 1) + "checkin.html?c=" + p.id
+        ? window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/") + 1) + "go.html?c=" + p.id
         : "";
       return `
         <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;">
