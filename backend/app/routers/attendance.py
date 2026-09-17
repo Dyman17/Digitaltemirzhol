@@ -45,7 +45,31 @@ def record_attendance(
     final_name = user.full_name if user else (raw_name if raw_name else "Қызметкер")
     final_pos = user.position if user else "Жұмысшы"
 
-    # 2. Validate the dynamic QR token when provided (entrance-screen flow).
+    # 2. Alternation rule: no two CHECK_INs (or two CHECK_OUTs) in a row.
+    # The last stored action of this person must be the opposite one.
+    if user is not None:
+        last_action = db.query(Attendance).filter(
+            Attendance.user_id == user.id,
+        ).order_by(Attendance.timestamp.desc()).first()
+    elif raw_name:
+        last_action = db.query(Attendance).filter(
+            Attendance.worker_name.ilike(f"%{raw_name}%"),
+        ).order_by(Attendance.timestamp.desc()).first()
+    else:
+        last_action = None
+
+    if last_action is not None and last_action.action_type == data.action_type:
+        if data.action_type == "CHECK_IN":
+            raise HTTPException(
+                status_code=400,
+                detail="Сіз әлдеқашан кіргенсіз: алдымен «Шықтың» түймесін басыңыз",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Сіз қазір жұмыста емессіз: алдымен «Кірдім» түймесін басыңыз",
+        )
+
+    # 3. Validate the dynamic QR token when provided (entrance-screen flow).
     qr_ok = is_valid_kiosk_token(data.kiosk_token or "")
     if data.kiosk_token and not qr_ok:
         raise HTTPException(
@@ -53,7 +77,7 @@ def record_attendance(
             detail="QR-код ескірген: кіреберістегі экрандағы жаңа кодты сканерлеңіз",
         )
 
-    # 3. Resolve checkpoint from dispatcher-managed work points (?c=...).
+    # 4. Resolve checkpoint from dispatcher-managed work points (?c=...).
     checkpoint_name = (data.checkpoint or "").strip() or CHECKPOINT_NAME
     if data.checkpoint_id:
         cp = db.query(WorkPoint).filter(
@@ -64,7 +88,7 @@ def record_attendance(
         if cp:
             checkpoint_name = cp.name
 
-    # 3. Save captured photo to the attendance archive (not the face registry)
+    # 5. Save captured photo to the attendance archive (not the face registry)
     raw_photo = data.photo_base64 or data.face_image_base64
     photo_url = user.photo_url if user else None
 
@@ -89,7 +113,7 @@ def record_attendance(
     action_kz = "жұмысқа келді" if data.action_type == "CHECK_IN" else "жұмыстан кетті"
     time_str = now.strftime("%H:%M")
 
-    # 4. Anti-spam: CHECK_OUT is accepted only MIN_CHECKOUT_SECONDS after
+    # 6. Anti-spam: CHECK_OUT is accepted only MIN_CHECKOUT_SECONDS after
     # the last CHECK_IN of the same person (prevents accidental double taps).
     if data.action_type == "CHECK_OUT":
         last_in = None
@@ -119,7 +143,7 @@ def record_attendance(
     else:
         note = "Қолмен енгізілген (тұлға мен QR расталмаған)"
 
-    # 5. Save attendance record directly into database
+    # 7. Save attendance record directly into database
     record = Attendance(
         user_id=user.id if user else None,
         worker_name=final_name,
@@ -131,7 +155,7 @@ def record_attendance(
     )
     db.add(record)
 
-    # 6. Boss notification
+    # 8. Boss notification
     notif = Notification(
         target_role="BOSS",
         user_id=user.id if user else None,
