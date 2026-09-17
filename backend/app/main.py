@@ -8,7 +8,7 @@ from pathlib import Path
 
 from app.core.config import STORAGE_DIR, BASE_DIR, CORS_ORIGINS
 from app.core.database import engine, Base, ensure_schema
-from app.routers import auth, attendance, naryad, leaves, kiosk, chat
+from app.routers import auth, attendance, naryad, leaves, kiosk, chat, audit
 
 # Create database tables (runs on import; safe for Render/Vercel cold start)
 # + backfill columns for DBs created by older app versions.
@@ -37,6 +37,7 @@ app.include_router(naryad.router)
 app.include_router(leaves.router)
 app.include_router(kiosk.router)
 app.include_router(chat.router)
+app.include_router(audit.router)
 
 # Mount Storage
 app.mount("/storage", StaticFiles(directory=str(STORAGE_DIR)), name="storage")

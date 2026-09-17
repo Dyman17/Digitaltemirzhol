@@ -8,26 +8,7 @@
 </head>
 <body>
 
-  <!-- Clean Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p data-i18n="brand_checkin_sub">Өткізу бекеті • Фото-фиксация</p>
-      </div>
-    </a>
-    
-    <div class="nav-actions">
-      <!-- Language Switcher -->
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-
-      <a href="register.html" class="nav-link" data-i18n="nav_register">Тіркелу</a>
-      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 680px;">
     
@@ -176,6 +157,10 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
+  <script>
+    window.PAGE = { section: "checkin", title: "Digital Temirzhol", sub: "Өткізу бекеті • Фото-фиксация" };
+  </script>
+  <script src="js/layout.js"></script>
   <script>
     const PLACEHOLDER_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
     let videoStream = null;

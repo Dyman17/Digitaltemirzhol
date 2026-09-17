@@ -11,23 +11,7 @@
 </head>
 <body style="display:flex; flex-direction:column; min-height:100vh;">
 
-  <!-- Enterprise Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Өндірістік жүйеге кіру</p>
-      </div>
-    </a>
-    <div class="nav-actions">
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <a href="checkin.html" class="nav-link" data-i18n="nav_checkin">Фото-чекин</a>
-      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 460px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
     
@@ -182,6 +166,10 @@
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script>
+    window.PAGE = { section: "login", title: "Digital Temirzhol", sub: "Өндірістік жүйеге кіру" };
+  </script>
+  <script src="js/layout.js"></script>
+  <script>
     let activeResetIdentifier = "";
 
     async function doLogin(u, p) {
@@ -240,8 +228,11 @@
         document.getElementById("resetSentNotice").innerText = res.message || "Растау коды сәтті жіберілді!";
         const demoBanner = document.getElementById("resetDemoCodeBanner");
         if (res.code) {
-          demoBanner.innerHTML = `🔑 Растау коды: <strong style="font-size:14px; color:#0f172a; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${res.code}</strong>`;
+          demoBanner.innerHTML = `Растау коды: <strong style="font-size:14px; color:#0f172a; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${res.code}</strong>`;
           document.getElementById("resetCodeInput").value = res.code;
+        } else if (res.channel === "email") {
+          demoBanner.innerHTML = `Код <strong>${res.masked_contact || "поштаңызға"}</strong> жіберілді. Хатыңызды тексеріңіз.`;
+          document.getElementById("resetCodeInput").value = "";
         } else {
           demoBanner.innerText = "";
         }

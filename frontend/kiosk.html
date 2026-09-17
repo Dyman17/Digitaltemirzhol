@@ -8,19 +8,7 @@
 </head>
 <body>
 
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1>Digital Temirzhol</h1>
-        <p>Кіреберіс экраны • Динамикалық QR</p>
-      </div>
-    </a>
-    <div class="nav-actions">
-      <a href="checkin.html" class="nav-link">Фото-чекин</a>
-      <a href="index.html" class="nav-link">Басты бет</a>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 560px; text-align: center;">
 
@@ -58,6 +46,11 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    window.PAGE = { section: "kiosk", title: "Digital Temirzhol", sub: "Кіреберіс экраны • Динамикалық QR" };
+  </script>
+  <script src="js/layout.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
     let countdownTimer = null;

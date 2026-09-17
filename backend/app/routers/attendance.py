@@ -9,6 +9,7 @@ from app.models.models import Attendance, User, Notification, Leave
 from app.schemas.schemas import AttendanceCheckIn
 from app.services.excel_service import generate_timesheet_csv
 from app.routers.kiosk import is_valid_kiosk_token, CHECKPOINT_NAME
+from app.services import audit as audit_log
 
 router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 
@@ -107,6 +108,11 @@ def record_attendance(
     db.add(notif)
     db.commit()
     db.refresh(record)
+    audit_log.log_event(
+        db, user,
+        audit_log.CHECK_IN if data.action_type == "CHECK_IN" else audit_log.CHECK_OUT,
+        "attendance", record.id, f"{final_name}: {action_kz} ({time_str})",
+    )
 
     return {
         "status": "SUCCESS",

@@ -107,6 +107,7 @@ class Leave(Base):
     document_url = Column(String(255), nullable=True) # Photo/screenshot/PDF of hospital note
     status = Column(String(20), default="PENDING")   # PENDING, APPROVED, REJECTED
     approved_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    boss_signature_url = Column(String(255), nullable=True)  # approver's board signature snapshot
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     approved_at = Column(DateTime, nullable=True)
@@ -149,5 +150,21 @@ class PasswordResetCode(Base):
     code_hash = Column(String(128), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AuditLog(Base):
+    """Unified event journal: who did what and when (общая таблица событий)."""
+
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    actor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    actor_name = Column(String(100), nullable=True)
+    actor_role = Column(String(20), nullable=True)
+    action = Column(String(40), nullable=False, index=True)  # e.g. NARYAD_APPROVE
+    entity = Column(String(20), nullable=True)  # naryad | leave | user | attendance
+    entity_id = Column(Integer, nullable=True)
+    detail = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

@@ -199,9 +199,20 @@ const Api = {
     return this.request(`/api/kiosk/notifications?role=${role || "BOSS"}`);
   },
 
-  // Roster (Live presence: who is present, who is absent)
-  getRoster(params = {}) {
+  // Audit journal (BOSS)
+  getAuditActions() {
+    return this.request("/api/audit/actions");
+  },
+  getAudit(action = "", limit = 100) {
     const q = new URLSearchParams();
+    if (action) q.append("action", action);
+    if (limit) q.append("limit", limit);
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    return this.request(`/api/audit/list${qs}`);
+  },
+
+  // Roster (Live presence: who is present, who is absent)
+  getRoster(params = {}) {    const q = new URLSearchParams();
     if (params.role) q.append("role", params.role);
     if (params.master_id) q.append("master_id", params.master_id);
     if (params.query) q.append("query", params.query);

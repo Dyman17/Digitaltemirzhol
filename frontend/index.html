@@ -11,39 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Enterprise Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Теміржол ішкі корпоративтік желісі мен өндірістік порталы</p>
-      </div>
-    </a>
-
-    <div class="nav-actions" style="display:flex; align-items:center; gap:12px;">
-      <!-- Language Switcher -->
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-
-      <!-- Authenticated User Capsule -->
-      <div id="navAuthCapsule" style="display:none; align-items:center; gap:10px;">
-        <img id="navAvatar" src="" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
-        <div style="text-align:right;">
-          <div style="font-size:13.5px; font-weight:700; color:var(--text-main);" id="navFullName">—</div>
-          <div style="font-size:11px; color:var(--primary); font-weight:600;" id="navRoleBadge">—</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="Api.logout()" style="margin-left:4px;">Шығу</button>
-      </div>
-
-      <!-- Guest Links -->
-      <div id="navGuestCapsule" style="display:flex; gap:8px;">
-        <a href="login.html" class="btn btn-secondary btn-sm">Кіру</a>
-        <a href="register.html" class="btn btn-primary btn-sm">Тіркелу</a>
-      </div>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 1360px;">
 
@@ -374,6 +342,10 @@
   <script src="js/i18n.js"></script>
   <script src="js/chat_modal.js"></script>
   <script>
+    window.PAGE = { section: "home", title: "Digital Temirzhol", sub: "Теміржол ішкі корпоративтік желісі мен өндірістік порталы" };
+  </script>
+  <script src="js/layout.js"></script>
+  <script>
     let currentUser = null;
     let colleaguesData = [];
     let currentStatusFilter = 'ALL';
@@ -393,16 +365,13 @@
     });
 
     function updateUserUI() {
-      const authCapsule = document.getElementById("navAuthCapsule");
-      const guestCapsule = document.getElementById("navGuestCapsule");
+      // Navbar (auth capsule / guest links) is rendered by js/layout.js.
       const authBanner = document.getElementById("authWelcomeBanner");
       const welcome = document.getElementById("guestWelcomeBanner");
       const sidebarUser = document.getElementById("sidebarUserCard");
       const sidebarGuest = document.getElementById("sidebarGuestCard");
 
       if (currentUser) {
-        authCapsule.style.display = "flex";
-        guestCapsule.style.display = "none";
         if (welcome) welcome.style.display = "none";
         if (sidebarUser) sidebarUser.style.display = "block";
         if (sidebarGuest) sidebarGuest.style.display = "none";
@@ -417,12 +386,6 @@
             bAvatar.src = Api.getFileUrl(currentUser.photo_url);
             bAvatar.style.display = "block";
           }
-        }
-
-        document.getElementById("navFullName").innerText = currentUser.full_name;
-        document.getElementById("navRoleBadge").innerText = formatRoleName(currentUser.role);
-        if (currentUser.photo_url) {
-          document.getElementById("navAvatar").src = Api.getFileUrl(currentUser.photo_url);
         }
 
         // Sidebar profile
@@ -440,8 +403,6 @@
 
         renderRoleServicePanel();
       } else {
-        authCapsule.style.display = "none";
-        guestCapsule.style.display = "flex";
         if (authBanner) authBanner.style.display = "none";
         if (welcome) welcome.style.display = "block";
         if (sidebarUser) sidebarUser.style.display = "none";

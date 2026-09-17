@@ -14,6 +14,8 @@ from app.core.config import FACE_PROFILES_DIR, SIGNATURES_DIR, DEMO_SHOW_RESET_C
 from app.models.models import User, PasswordResetCode
 from app.schemas.schemas import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
 from app.services.face_service import save_base64_image
+from app.services.mailer import send_reset_code, smtp_configured
+from app.services import audit as audit_log
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -104,6 +106,8 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=f"Тіркеу қатесі: {str(e)}")
 
     if not new_user.is_approved:
+        audit_log.log_event(db, new_user, audit_log.AUTH_REGISTER, "user", new_user.id,
+                            f"{new_user.role}: растау күтуде")
         return {
             "status": "PENDING_APPROVAL",
             "message": "Өтінішіңіз қабылданды. Бастық аккаунтты растаған соң кіре аласыз.",
@@ -111,6 +115,8 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         }
 
     token = create_access_token({"sub": new_user.username, "role": new_user.role, "id": new_user.id})
+    audit_log.log_event(db, new_user, audit_log.AUTH_REGISTER, "user", new_user.id,
+                        f"{new_user.role}: тіркелді")
 
     return {
         "access_token": token,
@@ -136,6 +142,7 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
         )
 
     token = create_access_token({"sub": user.username, "role": user.role, "id": user.id})
+    audit_log.log_event(db, user, audit_log.AUTH_LOGIN, "user", user.id, "жүйеге кірді")
 
     return {
         "access_token": token,
@@ -187,11 +194,15 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="Пайдаланушы табылмады")
     if action == "REJECT":
+        audit_log.log_event(db, boss, audit_log.USER_REJECT, "user", user.id,
+                            f"{user.full_name} қабылданбады")
         db.delete(user)
         db.commit()
         return {"status": "SUCCESS", "message": "Өтініш қабылданбады және жойылды"}
     user.is_approved = True
     db.commit()
+    audit_log.log_event(db, boss, audit_log.USER_APPROVE, "user", user.id,
+                        f"{user.full_name} ({user.role}) расталды")
     return {"status": "SUCCESS", "message": f"{user.full_name} расталды, кіре алады"}
 
 def find_user_by_identifier(raw: str, db: Session):
@@ -250,9 +261,16 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
     ))
     db.commit()
 
-    # TODO production: send `code` via SMS/email provider here.
-    # In demo mode the code is returned so it can be shown on screen.
-    target_contact = user.phone or user.email or user.username
+    # Delivery: real email if SMTP is configured and the user has an address,
+    # otherwise demo fallback (code on screen for the diploma defense).
+    channel = "demo"
+    emailed = False
+    if user.email and "@" in user.email and smtp_configured():
+        emailed = send_reset_code(user.email, user.full_name, code)
+        if emailed:
+            channel = "email"
+
+    target_contact = user.email if emailed else (user.phone or user.email or user.username)
     if "@" in target_contact:
         parts = target_contact.split("@")
         masked = parts[0][:2] + "***@" + parts[1]
@@ -263,11 +281,16 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
 
     resp = {
         "status": "SENT",
-        "message": f"6-таңбалы растау коды ({masked}) байланысына жолданды.",
+        "channel": channel,
+        "message": (
+            f"6-таңбалы код {masked} поштасына жіберілді."
+            if channel == "email" else
+            f"6-таңбалы растау коды ({masked}) байланысына жолданды."
+        ),
         "username": user.username,
         "masked_contact": masked,
     }
-    if DEMO_SHOW_RESET_CODE:
+    if channel == "demo" and DEMO_SHOW_RESET_CODE:
         resp["code"] = code
     return resp
 
@@ -303,6 +326,7 @@ def confirm_password_reset(data: PasswordResetConfirm, db: Session = Depends(get
     entry.used = True
     user.password_hash = hash_password(new_pw)
     db.commit()
+    audit_log.log_event(db, user, audit_log.AUTH_RESET, "user", user.id, "құпиясөз ауыстырылды")
 
     token = create_access_token({"sub": user.username, "role": user.role, "id": user.id})
 

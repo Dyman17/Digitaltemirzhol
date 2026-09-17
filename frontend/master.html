@@ -11,27 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">ШЕБЕР</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Жол шебері • Сандық Наряд-допуск №451 толтыру және жабу</p>
-      </div>
-    </a>
-
-    <div class="nav-actions">
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <div style="text-align: right;">
-        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="masterName">Жол шебері кабинеті</div>
-        <div style="font-size: 11px; color: var(--primary);" id="masterRole">Жол шебері / Бригадир</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container">
     
@@ -233,9 +213,14 @@
   </div>
 
   <script src="js/config.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/chat_modal.js"></script>
+  <script>
+    window.PAGE = { section: "cabinet", title: "Digital Temirzhol", sub: "Жол шебері • Наряд-допуск №451" };
+  </script>
+  <script src="js/layout.js"></script>
   <script>
     let currentMasterUser = null;
 
@@ -250,9 +235,7 @@
         window.location.href = "index.html";
         return;
       }
-      document.getElementById("masterName").innerText = currentMasterUser.full_name;
-      const orgInfo = currentMasterUser.organization ? ` • ${currentMasterUser.organization}` : "";
-      if (currentMasterUser.position) document.getElementById("masterRole").innerText = `${currentMasterUser.position}${orgInfo}`;
+      // User capsule lives in the shared navbar (js/layout.js).
       loadMasterBrigadeRoster();
       loadMasterNaryads();
       setInterval(loadMasterNaryads, 6000);

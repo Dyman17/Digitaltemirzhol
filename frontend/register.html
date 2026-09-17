@@ -11,24 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Қызметкерлер желісіне тіркелу</p>
-      </div>
-    </a>
-    <div class="nav-actions">
-      <!-- Language Switcher -->
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <a href="login.html" class="nav-link" data-i18n="nav_login">Кіру</a>
-      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 920px;">
     
@@ -253,6 +236,10 @@
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script>
+    window.PAGE = { section: "register", title: "Digital Temirzhol", sub: "Қызметкерлер желісіне тіркелу" };
+  </script>
+  <script src="js/layout.js"></script>
+  <script>
     let mediaStream = null;
     let capturedPhotoBase64 = null;
 
@@ -260,6 +247,7 @@
     const sigCanvas = document.getElementById("regSigCanvas");
     const sigCtx = sigCanvas.getContext("2d");
     let isDrawing = false;
+    let sigDrawn = false;
 
     function initSigCanvas() {
       const rect = sigCanvas.getBoundingClientRect();
@@ -284,6 +272,7 @@
 
       const start = (e) => {
         isDrawing = true;
+        sigDrawn = true;
         const { x, y } = getCoords(e);
         sigCtx.beginPath();
         sigCtx.moveTo(x, y);
@@ -307,6 +296,7 @@
 
     function clearSignatureCanvas() {
       sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      sigDrawn = false;
     }
 
     // Camera
@@ -435,7 +425,8 @@
       const username = document.getElementById("regUsername").value.trim();
       const password = document.getElementById("regPassword").value;
 
-      const sigBase64 = sigCanvas.toDataURL("image/png");
+      // Board signature is sent only if the user actually drew something
+      const sigBase64 = sigDrawn ? sigCanvas.toDataURL("image/png") : null;
 
       const payload = {
         username,

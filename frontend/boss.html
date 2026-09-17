@@ -11,27 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge">ҚТЖ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Начальник дистанции пути (ПЧ-13) • Басқару панелі</p>
-      </div>
-    </a>
-
-    <div class="nav-actions">
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <div style="text-align: right;">
-        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="bossName">Бастық кабинеті</div>
-        <div style="font-size: 11px; color: var(--primary);" id="bossRoleTitle">ПЧ Бастығы</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container">
     
@@ -101,6 +81,9 @@
       </button>
       <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-approvals', this)">
         Жаңа тіркеулер <span class="badge badge-yellow" id="pendingCountBadge" style="margin-left:4px;">0</span>
+      </button>
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-audit', this)">
+        Журнал событий
       </button>
       <button class="btn btn-primary btn-sm" onclick="openPrintRoster()" style="margin-left:auto; white-space:nowrap;">
         Басып шығару (Печать)
@@ -311,6 +294,42 @@
       </div>
     </div>
 
+    <!-- TAB 6: AUDIT JOURNAL -->
+    <div id="tab-audit" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3>Жалпы журнал событий (Аудит)</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Кім, қашан, не істеді: кіру/шығу, нарядтар, больничныйлар, растаулар.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="auditActionFilter" class="form-control" style="width:auto;" onchange="loadAudit()">
+              <option value="">Барлық оқиғалар</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="loadAudit()">Жаңарту</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Уақыты</th>
+                <th>Қызметкер</th>
+                <th>Оқиға</th>
+                <th>Толығырақ</th>
+              </tr>
+            </thead>
+            <tbody id="auditTable">
+              <tr><td colspan="4" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal for Document/Screenshot View -->
@@ -330,6 +349,10 @@
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/chat_modal.js"></script>
+  <script>
+    window.PAGE = { section: "cabinet", title: "Digital Temirzhol", sub: "ПЧ Бастығы • Басқару панелі" };
+  </script>
+  <script src="js/layout.js"></script>
   <script>
     let bossRosterData = [];
 
@@ -353,6 +376,9 @@
       if (tabId === "tab-approvals") {
         loadPendingUsers();
       }
+      if (tabId === "tab-audit") {
+        loadAudit();
+      }
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -366,9 +392,7 @@
         window.location.href = "index.html";
         return;
       }
-      document.getElementById("bossName").innerText = u.full_name;
-      const orgInfo = u.organization ? ` • ${u.organization}` : "";
-      if (u.position) document.getElementById("bossRoleTitle").innerText = `${u.position}${orgInfo}`;
+      // User capsule lives in the shared navbar (js/layout.js).
 
       // Set default date to today
       const today = new Date().toISOString().split("T")[0];
@@ -478,7 +502,9 @@
             ? `<button class="btn btn-primary btn-sm" onclick="approveLeave(${l.id}, 'APPROVED')">Бекіту (Қол қою)</button>
                <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="approveLeave(${l.id}, 'REJECTED')">Қайтару</button>`
             : (l.status === "APPROVED"
-                ? `<span class="badge badge-green">БЕКІТІЛГЕН</span>`
+                ? `<span class="badge badge-green">БЕКІТІЛГЕН</span>` + (l.boss_signature_url
+                    ? `<br/><img src="${Api.getFileUrl(l.boss_signature_url)}" alt="Қол" title="Бастықтың қолы" style="height:30px;margin-top:4px;background:#fff;border:1px solid var(--border-color);border-radius:4px;padding:2px;">`
+                    : "")
                 : `<span class="badge badge-red">ҚАЙТАРЫЛҒАН</span>`);
 
           return `
@@ -542,6 +568,47 @@
       } catch (err) {
         showToast("Қате: " + err.message, "danger");
       }
+    }
+
+    async function loadAudit() {
+      const tbody = document.getElementById("auditTable");
+      const filter = document.getElementById("auditActionFilter");
+      try {
+        if (filter.options.length <= 1) {
+          const actions = await Api.getAuditActions();
+          actions.forEach(a => {
+            const opt = document.createElement("option");
+            opt.value = a.code;
+            opt.textContent = a.label;
+            filter.appendChild(opt);
+          });
+        }
+        const events = await Api.getAudit(filter.value, 100);
+        if (!events.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Оқиғалар жоқ</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = events.map(e => `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:12px; white-space:nowrap;">${escapeHtml(e.created_at)}</td>
+            <td><strong>${escapeHtml(e.actor_name)}</strong><br/><small style="color:var(--text-muted);">${escapeHtml(e.actor_role)}</small></td>
+            <td><span class="badge badge-blue">${escapeHtml(e.action_label)}</span></td>
+            <td style="font-size:12.5px;">${escapeHtml(e.detail)}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Жүктеу қатесі: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     async function loadTimesheet() {

@@ -41,3 +41,11 @@ DEMO_SHOW_RESET_CODE = os.getenv("DEMO_SHOW_RESET_CODE", "true").lower() in ("1"
 
 # Dynamic QR lifetime in seconds (entrance-screen token rotation window)
 KIOSK_TOKEN_TTL = int(os.getenv("KIOSK_TOKEN_TTL", "30"))
+
+# Outgoing mail for password reset (plain SMTP via stdlib; any provider works).
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.getenv("SMTP_FROM", "")
+SMTP_STARTTLS = os.getenv("SMTP_STARTTLS", "true").lower() in ("1", "true", "yes")

@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from PIL import Image as PILImage, ImageDraw, ImageFont
 
-from app.core.config import NARYAD_DIR, SIGNATURES_DIR, BASE_DIR
+from app.core.config import NARYAD_DIR, SIGNATURES_DIR, BASE_DIR, STORAGE_DIR
 
 # Font with Cyrillic support. Priority:
 # 1) bundled DejaVu (repo: backend/app/assets) — works on Render/Linux + Windows
@@ -37,6 +37,19 @@ def _register_fonts():
 
 
 FONT_NORMAL, FONT_BOLD = _register_fonts()
+
+def _signature_image(url: str | None, max_width: float = 5.0 * cm):
+    """ReportLab Image flowable for a /storage/... signature URL, or None."""
+    if not url or not url.startswith("/storage/"):
+        return None
+    path = STORAGE_DIR / url[len("/storage/"):]
+    if not path.exists() or path.stat().st_size == 0:
+        return None
+    try:
+        return Image(str(path), width=max_width, height=1.5 * cm)
+    except Exception:
+        return None
+
 
 def create_facsimile_signature(name: str, target_path: Path, role: str = "ПЧ"):
     """Creates a transparent PNG facsimile stamp if needed."""
@@ -217,11 +230,18 @@ def generate_naryad_pdf(naryad, db) -> str:
     disp_stamp_desc = f"<b>РҰҚСАТ БЕРДІ (Диспетчер):</b><br/>{disp_name}<br/>«Технологиялық терезе» берілді<br/>Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
     master_stamp_desc = f"<b>ЖҰМЫСТЫ ТАПСЫРДЫ (Мастер):</b><br/>{master_name}<br/>Жұмыс аяқталды, жол бос.<br/>Уақыт: {naryad.actual_end or '16:30'}"
 
+    def approval_cell(desc: str, sig_url: str | None):
+        parts = [Paragraph(desc, normal_style)]
+        img = _signature_image(sig_url)
+        if img is not None:
+            parts.append(img)
+        return parts
+
     approval_table = [
         [
-            Paragraph(boss_stamp_desc, normal_style),
-            Paragraph(disp_stamp_desc, normal_style),
-            Paragraph(master_stamp_desc, normal_style)
+            approval_cell(boss_stamp_desc, getattr(naryad, "boss_signature_url", None)),
+            approval_cell(disp_stamp_desc, getattr(naryad, "dispatcher_signature_url", None)),
+            approval_cell(master_stamp_desc, getattr(naryad, "master_signature_url", None)),
         ]
     ]
 

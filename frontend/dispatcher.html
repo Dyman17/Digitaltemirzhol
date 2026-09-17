@@ -11,27 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">ДНЦ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Поезд диспетчерлік орталығы • Қозғалыс қауіпсіздігі және «Тех. Окно»</p>
-      </div>
-    </a>
-
-    <div class="nav-actions">
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <div style="text-align: right;">
-        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="dispName">Диспетчер кабинеті</div>
-        <div style="font-size: 11px; color: var(--primary);" id="dispRole">Поезд диспетчері</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container">
     
@@ -197,9 +177,14 @@
   </main>
 
   <script src="js/config.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/chat_modal.js"></script>
+  <script>
+    window.PAGE = { section: "cabinet", title: "Digital Temirzhol", sub: "Диспетчер • Қозғалыс және «Тех. окно»" };
+  </script>
+  <script src="js/layout.js"></script>
   <script>
     let dispatcherRosterData = [];
     let currentRosterFilter = 'ALL';
@@ -215,9 +200,7 @@
         window.location.href = "index.html";
         return;
       }
-      document.getElementById("dispName").innerText = u.full_name;
-      const orgInfo = u.organization ? ` • ${u.organization}` : "";
-      if (u.position) document.getElementById("dispRole").innerText = `${u.position}${orgInfo}`;
+      // User capsule lives in the shared navbar (js/layout.js).
       loadDispatcherRoster();
       loadDispatcherNaryads();
       setInterval(loadDispatcherNaryads, 6000);

@@ -11,24 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <header class="navbar">
-    <a href="index.html" class="brand-wrapper">
-      <div class="brand-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">ЖҰМЫСШЫ</div>
-      <div class="brand-info">
-        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
-        <p>Жұмыскер жеке кабинеті • Табель, больничный және нарядтар</p>
-      </div>
-    </a>
-
-    <div class="nav-actions">
-      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
-        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
-      </button>
-      <a href="checkin.html" class="nav-link" data-i18n="nav_checkin">Фото-чекин</a>
-      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
-    </div>
-  </header>
+  <div id="appNavbar"></div>
 
   <main class="main-container" style="max-width: 960px;">
     
@@ -169,6 +152,10 @@
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/chat_modal.js"></script>
+  <script>
+    window.PAGE = { section: "cabinet", title: "Digital Temirzhol", sub: "Жұмыскер • Жеке кабинет" };
+  </script>
+  <script src="js/layout.js"></script>
   <script>
     let docBase64 = null;
     let currentUser = null;

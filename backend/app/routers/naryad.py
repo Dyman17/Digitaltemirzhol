@@ -10,7 +10,9 @@ from app.core.database import get_db
 from app.core.security import get_current_user_optional, require_roles
 from app.models.models import Naryad, NaryadBrigade, User, Notification
 from app.schemas.schemas import NaryadCreate, NaryadApproveBoss, NaryadPermitDispatcher, NaryadComplete
-from app.services.pdf_service import generate_naryad_pdf, create_facsimile_signature
+from app.services.pdf_service import generate_naryad_pdf
+from app.services.sign_service import resolve_signature
+from app.services import audit as audit_log
 from app.core.config import SIGNATURES_DIR, NARYAD_DIR
 
 router = APIRouter(prefix="/api/naryad", tags=["Smart Naryad-Dopusk"])
@@ -81,7 +83,8 @@ def create_naryad(
         safety_measures=", ".join(data.safety_measures),
         plan_start=data.plan_start,
         plan_end=data.plan_end,
-        status="PENDING_BOSS"
+        status="PENDING_BOSS",
+        master_signature_url=resolve_signature(master, "Мастер"),
     )
     db.add(naryad)
     db.commit()
@@ -102,6 +105,8 @@ def create_naryad(
     )
     db.add(notif)
     db.commit()
+    audit_log.log_event(db, master, audit_log.NARYAD_CREATE, "naryad", naryad.id,
+                        f"{doc_number}: {data.work_type}")
 
     return {"status": "SUCCESS", "naryad_id": naryad.id, "number": doc_number}
 
@@ -126,6 +131,9 @@ def list_naryads(status: Optional[str] = None, db: Session = Depends(get_db)):
             "plan_start": n.plan_start,
             "plan_end": n.plan_end,
             "status": n.status,
+            "master_signature_url": n.master_signature_url,
+            "boss_signature_url": n.boss_signature_url,
+            "dispatcher_signature_url": n.dispatcher_signature_url,
             "pdf_path": n.pdf_path,
             "created_at": n.created_at.strftime("%d.%m.%Y %H:%M")
         })
@@ -145,6 +153,8 @@ def approve_by_boss(
 
     naryad.boss_id = boss.id
     naryad.status = "APPROVED_BOSS"
+    # The boss's board signature (or facsimile) is stamped on the document
+    naryad.boss_signature_url = resolve_signature(boss, "Бастық")
 
     # Notify Dispatcher
     notif = Notification(
@@ -155,6 +165,8 @@ def approve_by_boss(
     )
     db.add(notif)
     db.commit()
+    audit_log.log_event(db, boss, audit_log.NARYAD_APPROVE, "naryad", naryad.id,
+                        f"{naryad.number} бекітілді")
 
     return {"status": "SUCCESS", "message": "Бастық нарядқа қол қойды және Диспетчерге жіберілді"}
 
@@ -173,6 +185,7 @@ def permit_by_dispatcher(
 
     naryad.dispatcher_id = disp.id
     naryad.status = "PERMITTED_DISPATCHER"
+    naryad.dispatcher_signature_url = resolve_signature(disp, "Диспетчер")
 
     notif = Notification(
         target_role="ALL",
@@ -182,6 +195,8 @@ def permit_by_dispatcher(
     )
     db.add(notif)
     db.commit()
+    audit_log.log_event(db, disp, audit_log.NARYAD_PERMIT, "naryad", naryad.id,
+                        f"{naryad.number}: терезе берілді")
 
     return {"status": "SUCCESS", "message": "Диспетчер рұқсат берді. Технологиялық терезе ашылды."}
 
@@ -213,6 +228,8 @@ def complete_naryad(
     )
     db.add(notif)
     db.commit()
+    audit_log.log_event(db, closer, audit_log.NARYAD_COMPLETE, "naryad", naryad.id,
+                        f"{naryad.number} жабылды")
 
     return {"status": "SUCCESS", "message": "Наряд жабылды, ресми PDF жасалды", "pdf_path": pdf_url}
 

@@ -8,6 +8,8 @@ from app.core.security import get_current_user_optional, require_roles
 from app.models.models import Leave, User, Notification
 from app.schemas.schemas import LeaveCreate, LeaveApprove
 from app.services.face_service import save_base64_image
+from app.services.sign_service import resolve_signature
+from app.services import audit as audit_log
 from app.core.config import LEAVES_DIR
 
 router = APIRouter(prefix="/api/leaves", tags=["Leaves & Medical"])
@@ -55,6 +57,8 @@ def submit_leave(
     db.add(notif)
     db.commit()
     db.refresh(leave)
+    audit_log.log_event(db, user, audit_log.LEAVE_CREATE, "leave", leave.id,
+                        f"{data.leave_type}: {data.start_date} — {data.end_date}")
 
     return {"status": "SUCCESS", "leave_id": leave.id, "message": "Өтініш Бастықтың қарауына жіберілді"}
 
@@ -86,6 +90,7 @@ def list_leaves(
             "status": l.status,
             "comment": l.comment,
             "approved_by_name": l.approved_by.full_name if l.approved_by else None,
+            "boss_signature_url": l.boss_signature_url,
             "created_at": l.created_at.strftime("%d.%m.%Y")
         })
     return results
@@ -105,6 +110,9 @@ def approve_leave(
     leave.status = data.status
     leave.approved_by_id = boss.id
     leave.approved_at = datetime.utcnow()
+    # The boss's board signature is stamped on approved applications
+    if data.status == "APPROVED":
+        leave.boss_signature_url = resolve_signature(boss, "Бастық")
 
     if data.status == "APPROVED":
         notif = Notification(
@@ -122,5 +130,10 @@ def approve_leave(
         )
     db.add(notif)
     db.commit()
+    audit_log.log_event(
+        db, boss,
+        audit_log.LEAVE_APPROVE if data.status == "APPROVED" else audit_log.LEAVE_REJECT,
+        "leave", leave.id, f"{leave.start_date} — {leave.end_date}: {data.status}",
+    )
 
     return {"status": "SUCCESS", "message": "Өтініш қаралды: " + data.status}
