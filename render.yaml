@@ -1,6 +1,6 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
 # Деплой в 1 клик: Render Dashboard -> New -> Blueprint -> выбрать этот репозиторий.
-# Создаст: Postgres + API (монолит: API + фронтенд) + отдельный статический фронтенд.
+# Создаст: Postgres + API (монолит: API + фронтенд на одном URL).
 databases:
   - name: digitaltemirzhol-db
     databaseName: digitaltemirzhol
@@ -32,17 +32,6 @@ services:
     # NOTE: persistent disk убран — на free-тарифе диски запрещены.
     # Загруженные фото/PDF живут до перезапуска сервиса (для диплома ок;
     # для продакшена нужен платный план + disk или S3-совместимое хранилище).
-
-  # --- Отдельный статический фронтенд (опционально; API_URL = URL сервиса выше) ---
-  # После первого деплоя API вставьте его URL в env API_URL этого сайта.
-  # NOTE: без rewrites — сайт многостраничный (index/boss/master/...html).
-  - type: web
-    name: digitaltemirzhol-frontend
-    runtime: static
-    plan: free
-    rootDir: frontend
-    buildCommand: 'if [ -n "$API_URL" ]; then echo "window.DT_API_BASE=\"$API_URL\";" > js/config.js; fi'
-    staticPublishPath: ./
-    envVars:
-      - key: API_URL
-        value: https://digitaltemirzhol-api.onrender.com
+# Отдельный статический фронтенд на Render НЕ создаём (free-план его не принимает):
+# API-монолит уже раздаёт frontend по своему URL, а внешний статик живёт на Vercel
+# (там API_URL прописывается в env на стороне Vercel).
