@@ -29,10 +29,9 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: "*"
-    disk:
-      name: dt-storage
-      mountPath: /opt/render/project/src/backend/storage
-      sizeGB: 1
+    # NOTE: persistent disk убран — на free-тарифе диски запрещены.
+    # Загруженные фото/PDF живут до перезапуска сервиса (для диплома ок;
+    # для продакшена нужен платный план + disk или S3-совместимое хранилище).
 
   # --- Отдельный статический фронтенд (опционально; API_URL = URL сервиса выше) ---
   # После первого деплоя API вставьте его URL в env API_URL этого сайта.
