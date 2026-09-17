@@ -94,6 +94,15 @@ const Api = {
       body: JSON.stringify(userData)
     });
   },
+  getPendingUsers() {
+    return this.request("/api/auth/pending-users");
+  },
+  approveUser(userId, action = "APPROVE") {
+    return this.request("/api/auth/approve-user", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, action })
+    });
+  },
   requestPasswordReset(identifier) {
     return this.request("/api/auth/reset-password/request", {
       method: "POST",
@@ -118,12 +127,17 @@ const Api = {
       body: JSON.stringify(payload)
     });
   },
-  getRecentAttendance() {
-    return this.request("/api/attendance/recent");
+  getRecentAttendance(limit = 20) {
+    const q = limit ? `?limit=${encodeURIComponent(limit)}` : "";
+    return this.request(`/api/attendance/recent${q}`);
   },
   getTimesheet(dateStr) {
     const query = dateStr ? `?target_date=${dateStr}` : "";
     return this.request(`/api/attendance/timesheet${query}`);
+  },
+  downloadTimesheetCsv(dateStr) {
+    const q = dateStr ? `?target_date=${encodeURIComponent(dateStr)}` : "";
+    window.open(`${API_BASE}/api/attendance/export-csv${q}`, "_blank");
   },
 
   // Naryad
@@ -170,10 +184,10 @@ const Api = {
     const query = userId ? `?user_id=${userId}` : "";
     return this.request(`/api/leaves/list${query}`);
   },
-  approveLeave(leaveId) {
+  approveLeave(leaveId, status = "APPROVED") {
     return this.request("/api/leaves/approve", {
       method: "POST",
-      body: JSON.stringify({ leave_id: leaveId, status: "APPROVED" })
+      body: JSON.stringify({ leave_id: leaveId, status })
     });
   },
 

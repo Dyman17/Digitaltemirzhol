@@ -27,6 +27,7 @@ class User(Base):
     face_embedding = Column(Text, nullable=True)  # JSON or feature string for biometric match
     signature_url = Column(String(255), nullable=True)  # Path to transparent PNG signature
     master_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Linked Master for workers
+    is_approved = Column(Boolean, default=True)  # BOSS/DISPATCHER self-registrations wait for approval
     created_at = Column(DateTime, default=datetime.utcnow)
 
     attendances = relationship("Attendance", back_populates="user", cascade="all, delete-orphan")
@@ -136,4 +137,17 @@ class ChatMessage(Base):
 
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
+
+
+class PasswordResetCode(Base):
+    """One-time 6-digit codes for password reset (hashed, 10-minute expiry)."""
+
+    __tablename__ = "password_reset_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    code_hash = Column(String(128), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 

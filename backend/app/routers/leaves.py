@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.core.database import get_db
+from app.core.security import get_current_user_optional, require_roles
 from app.models.models import Leave, User, Notification
 from app.schemas.schemas import LeaveCreate, LeaveApprove
 from app.services.face_service import save_base64_image
@@ -11,18 +12,30 @@ from app.core.config import LEAVES_DIR
 
 router = APIRouter(prefix="/api/leaves", tags=["Leaves & Medical"])
 
+ALLOWED_ROLES = ("WORKER", "MASTER", "DISPATCHER", "BOSS")
+
 @router.post("/create")
-def submit_leave(data: LeaveCreate, user_id: int = 4, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+def submit_leave(
+    data: LeaveCreate,
+    db: Session = Depends(get_db),
+    token_user=Depends(get_current_user_optional),
+):
+    # The author is always the logged-in user — no more hardcoded user_id=4.
+    if token_user is None:
+        raise HTTPException(status_code=401, detail="Өтініш жіберу үшін жүйеге кіріңіз")
+    user = db.query(User).filter(User.id == token_user.id).first()
     if not user:
-        user = db.query(User).filter(User.role == "WORKER").first()
+        raise HTTPException(status_code=401, detail="Пайдаланушы табылмады")
+
+    if data.start_date > data.end_date:
+        raise HTTPException(status_code=400, detail="Басталу күні аяқталу күнінен кеш болмауы тиіс")
 
     doc_url = None
     if data.document_base64:
-        doc_url = save_base64_image(data.document_base64, LEAVES_DIR, prefix=f"leave_{user.username if user else 'usr'}")
+        doc_url = save_base64_image(data.document_base64, LEAVES_DIR, prefix=f"leave_{user.username}")
 
     leave = Leave(
-        user_id=user.id if user else 1,
+        user_id=user.id,
         leave_type=data.leave_type,
         start_date=data.start_date,
         end_date=data.end_date,
@@ -36,7 +49,7 @@ def submit_leave(data: LeaveCreate, user_id: int = 4, db: Session = Depends(get_
     notif = Notification(
         target_role="BOSS",
         title="🏥 Жаңа анықтама / өтініш келді",
-        message=f"{user.full_name if user else 'Жұмыскер'} {type_kz} өтінішін және емхана құжатын жүктеді.",
+        message=f"{user.full_name} {type_kz} өтінішін және емхана құжатын жүктеді.",
         category="LEAVE"
     )
     db.add(notif)
@@ -46,7 +59,14 @@ def submit_leave(data: LeaveCreate, user_id: int = 4, db: Session = Depends(get_
     return {"status": "SUCCESS", "leave_id": leave.id, "message": "Өтініш Бастықтың қарауына жіберілді"}
 
 @router.get("/list")
-def list_leaves(user_id: Optional[int] = None, db: Session = Depends(get_db)):
+def list_leaves(
+    user_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    token_user=Depends(get_current_user_optional),
+):
+    # Privacy: non-boss users see only their own applications.
+    if token_user is not None and token_user.role != "BOSS":
+        user_id = token_user.id
     query = db.query(Leave).order_by(Leave.id.desc())
     if user_id:
         query = query.filter(Leave.user_id == user_id)
@@ -71,23 +91,36 @@ def list_leaves(user_id: Optional[int] = None, db: Session = Depends(get_db)):
     return results
 
 @router.post("/approve")
-def approve_leave(data: LeaveApprove, db: Session = Depends(get_db)):
+def approve_leave(
+    data: LeaveApprove,
+    db: Session = Depends(get_db),
+    boss=Depends(require_roles("BOSS")),
+):
     leave = db.query(Leave).filter(Leave.id == data.leave_id).first()
     if not leave:
         raise HTTPException(status_code=404, detail="Өтініш табылмады")
+    if data.status not in ("APPROVED", "REJECTED"):
+        raise HTTPException(status_code=400, detail="Белгісіз мәртебе")
 
-    boss = db.query(User).filter(User.role == "BOSS").first()
     leave.status = data.status
-    leave.approved_by_id = boss.id if boss else None
+    leave.approved_by_id = boss.id
     leave.approved_at = datetime.utcnow()
 
-    notif = Notification(
-        user_id=leave.user_id,
-        title="✅ Өтініш бекітілді",
-        message=f"Сіздің анықтамаңыз Бастық тарапынан бекітілді ({leave.start_date} — {leave.end_date}). Бұл күндер табельде сақталды.",
-        category="LEAVE"
-    )
+    if data.status == "APPROVED":
+        notif = Notification(
+            user_id=leave.user_id,
+            title="✅ Өтініш бекітілді",
+            message=f"Сіздің анықтамаңыз Бастық тарапынан бекітілді ({leave.start_date} — {leave.end_date}). Бұл күндер табельде сақталды.",
+            category="LEAVE"
+        )
+    else:
+        notif = Notification(
+            user_id=leave.user_id,
+            title="❌ Өтініш қайтарылды",
+            message=f"Сіздің өтінішіңіз ({leave.start_date} — {leave.end_date}) Бастық тарапынан қайтарылды.",
+            category="LEAVE"
+        )
     db.add(notif)
     db.commit()
 
-    return {"status": "SUCCESS", "message": "Анықтама сәтті бекітілді және годовой графикке енгізілді"}
+    return {"status": "SUCCESS", "message": "Өтініш қаралды: " + data.status}

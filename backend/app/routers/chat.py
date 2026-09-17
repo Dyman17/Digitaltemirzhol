@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from app.core.database import get_db
+from app.core.security import get_current_user_optional
 from app.models.models import ChatMessage, User, Attendance
 from app.schemas.schemas import ChatMessageCreate
 
@@ -17,31 +18,24 @@ def prune_expired_messages(db: Session):
     if deleted > 0:
         db.commit()
 
-def get_or_create_user(db: Session, user_id: int, fallback_name: str = "Қызметкер") -> User:
-    u = db.query(User).filter(User.id == user_id).first()
-    if not u:
-        u = User(
-            id=user_id,
-            username=f"guest_{user_id}",
-            password_hash="system_guest_pass",
-            full_name=fallback_name,
-            role="WORKER",
-            position="Жұмысшы"
-        )
-        db.add(u)
-        db.commit()
-        db.refresh(u)
-    return u
-
 @router.post("/send")
-def send_message(data: ChatMessageCreate, db: Session = Depends(get_db)):
+def send_message(
+    data: ChatMessageCreate,
+    db: Session = Depends(get_db),
+    token_user=Depends(get_current_user_optional),
+):
     prune_expired_messages(db)
-
-    sender = get_or_create_user(db, data.sender_id, "Жөнелтуші")
-    receiver = get_or_create_user(db, data.receiver_id, "Алушы")
 
     if not data.text.strip():
         raise HTTPException(status_code=400, detail="Хабарлама бос болмауы керек")
+
+    # No guest auto-creation: both sides must be real registered users.
+    # When a JWT is present, the sender must be the logged-in user (no impersonation).
+    sender_id = token_user.id if token_user is not None else data.sender_id
+    sender = db.query(User).filter(User.id == sender_id).first()
+    receiver = db.query(User).filter(User.id == data.receiver_id).first()
+    if not sender or not receiver:
+        raise HTTPException(status_code=404, detail="Чат қатысушысы табылмады")
 
     msg = ChatMessage(
         sender_id=sender.id,
@@ -100,9 +94,13 @@ def get_messages(
 def get_chat_users(
     query: Optional[str] = Query(None),
     role: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    token_user=Depends(get_current_user_optional),
 ):
-    """Returns users with live presence status for search and chat."""
+    """Returns users with live presence status for search and chat.
+
+    Privacy: IIN is never exposed here; phone numbers only for logged-in users.
+    """
     q = db.query(User)
     if query:
         term = f"%{query.strip()}%"
@@ -117,7 +115,8 @@ def get_chat_users(
         q = q.filter(User.role == role)
 
     users = q.order_by(User.full_name.asc()).all()
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Same time basis as stored Attendance timestamps (datetime.now, server local)
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     results = []
     seen_names = set()
@@ -145,51 +144,14 @@ def get_chat_users(
             "organization": u.organization or "ПЧ-13 (Алматы дистанциясы)",
             "unit_code": u.unit_code or "ПЧ-13",
             "subdivision": u.subdivision or "Участок №3",
-            "iin": u.iin or "—",
             "emp_num": u.emp_num or f"RG-{u.id:04d}",
+            "phone": u.phone if token_user is not None else None,
             "photo_url": u.photo_url or (latest_att.photo_url if latest_att else None),
             "master_id": u.master_id,
             "status": "PRESENT" if is_present else "ABSENT",
             "last_seen": latest_att.timestamp.strftime("%H:%M") if latest_att else None
         })
 
-    # Also include unregistered workers from today's attendance (e.g. checked in via camera)
-    if not role or role == "WORKER":
-        atts_q = db.query(Attendance).filter(Attendance.user_id.is_(None))
-        if query:
-            atts_q = atts_q.filter(Attendance.worker_name.ilike(f"%{query.strip()}%"))
-        unreg_atts = atts_q.order_by(Attendance.timestamp.desc()).all()
-
-        for att in unreg_atts:
-            name = (att.worker_name or "").strip()
-            if name and name.lower() not in seen_names:
-                seen_names.add(name.lower())
-                # Ensure they have a user entry in database for chat foreign keys
-                existing_u = db.query(User).filter(User.full_name == name).first()
-                if not existing_u:
-                    existing_u = User(
-                        username=f"kpp_{att.id}",
-                        password_hash="temp_hash",
-                        full_name=name,
-                        role="WORKER",
-                        position="Жұмысшы (КПП)",
-                        emp_num=f"КПП-{att.id:03d}",
-                        photo_url=att.photo_url
-                    )
-                    db.add(existing_u)
-                    db.commit()
-                    db.refresh(existing_u)
-
-                results.append({
-                    "id": existing_u.id,
-                    "full_name": existing_u.full_name,
-                    "role": "WORKER",
-                    "position": existing_u.position,
-                    "emp_num": existing_u.emp_num,
-                    "photo_url": att.photo_url or existing_u.photo_url,
-                    "master_id": None,
-                    "status": "PRESENT" if att.action_type == "CHECK_IN" else "ABSENT",
-                    "last_seen": att.timestamp.strftime("%H:%M")
-                })
-
+    # NOTE: unregistered terminal check-ins are intentionally NOT listed here —
+    # chat requires a real account. They remain visible in /api/attendance/roster.
     return results

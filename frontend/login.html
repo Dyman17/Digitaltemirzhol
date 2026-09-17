@@ -63,27 +63,6 @@
         </button>
       </form>
 
-      <!-- Quick Role Logins for seamless demo -->
-      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-color);">
-        <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; text-align: center;">
-          ⚡ Жылдам кіру (1 басумен таңдау):
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('boss', 'boss')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
-            👔 ПЧ Бастығы
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('dispatcher', 'dispatcher')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
-            📡 Диспетчер (ДНЦ)
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('master', 'master')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
-            👷 Жол шебері
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('worker', 'worker')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
-            🔨 Жұмысшы
-          </button>
-        </div>
-      </div>
-
       <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
         <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
           Жүйеде әлі тіркелмедіңіз бе?
@@ -167,7 +146,8 @@
               type="password" 
               id="resetNewPassword" 
               class="form-control" 
-              placeholder="Кем дегенде 4 таңба" 
+              placeholder="Кем дегенде 6 таңба" 
+              minlength="6"
               required 
               autocomplete="new-password"
             >
@@ -220,17 +200,11 @@
       }
     }
 
-    async function handleLogin(e) {
+    async     function handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById("loginUsername").value.trim();
       const p = document.getElementById("loginPassword").value;
       doLogin(u, p);
-    }
-
-    function quickLogin(user, pass) {
-      document.getElementById("loginUsername").value = user;
-      document.getElementById("loginPassword").value = pass;
-      doLogin(user, pass);
     }
 
     // --- Password Reset Flow ---

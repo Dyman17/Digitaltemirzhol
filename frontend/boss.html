@@ -79,25 +79,28 @@
 
       <div class="stat-card">
         <div>
-          <div class="stat-val">100%</div>
-          <div class="stat-label">Қауіпсіздік режимі</div>
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-label">Барлық қызметкерлер</div>
         </div>
       </div>
     </div>
 
     <!-- Tab Navigation -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; overflow-x: auto; align-items:center;">
-      <button class="btn btn-primary btn-sm tab-btn active" onclick="switchTab('tab-naryads')">
+      <button class="btn btn-primary btn-sm tab-btn active" onclick="switchTab('tab-naryads', this)">
         Наряд-допусктарды бекіту
       </button>
-      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-leaves')">
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-leaves', this)">
         Больничный & Отпуск бекіту
       </button>
-      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-timesheet')">
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-timesheet', this)">
         Табель және жылдық график
       </button>
-      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-masters')">
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-masters', this)">
         Шеберлермен байланыс (Личка) & Толық БД
+      </button>
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-approvals', this)">
+        Жаңа тіркеулер <span class="badge badge-yellow" id="pendingCountBadge" style="margin-left:4px;">0</span>
       </button>
       <button class="btn btn-primary btn-sm" onclick="openPrintRoster()" style="margin-left:auto; white-space:nowrap;">
         Басып шығару (Печать)
@@ -276,6 +279,38 @@
       </div>
     </div>
 
+    <!-- TAB 5: PENDING ACCOUNT APPROVALS -->
+    <div id="tab-approvals" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h3>Жаңа тіркеулерді растау (Бастық / Диспетчер)</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Өзін Бастық немесе Диспетчер ретінде тіркегендер сіздің растауыңызсыз кіре алмайды.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadPendingUsers()">Жаңарту</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Қызметкер (ФИО)</th>
+                <th>Рөлі</th>
+                <th>Бөлімі</th>
+                <th>Байланыс</th>
+                <th>Әрекеттер</th>
+              </tr>
+            </thead>
+            <tbody id="pendingUsersTable">
+              <tr><td colspan="5" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal for Document/Screenshot View -->
@@ -298,7 +333,7 @@
   <script>
     let bossRosterData = [];
 
-    function switchTab(tabId) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
       document.querySelectorAll(".tab-btn").forEach(el => {
         el.classList.remove("btn-primary", "active");
@@ -306,12 +341,17 @@
       });
 
       document.getElementById(tabId).style.display = "block";
-      const activeBtn = event.currentTarget;
-      activeBtn.classList.remove("btn-secondary");
-      activeBtn.classList.add("btn-primary", "active");
+      const activeBtn = btn || document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.remove("btn-secondary");
+        activeBtn.classList.add("btn-primary", "active");
+      }
 
       if (tabId === "tab-masters") {
         loadBossMastersAndStaff();
+      }
+      if (tabId === "tab-approvals") {
+        loadPendingUsers();
       }
     }
 
@@ -339,6 +379,7 @@
       loadLeaves();
       loadTimesheet();
       loadBossMastersAndStaff();
+      loadPendingUsers();
 
       // Poll notifications every 5 seconds
       setInterval(loadNotifications, 5000);
@@ -434,8 +475,11 @@
             : `<span style="font-size:12px; color:var(--text-faint);">Құжатсыз</span>`;
 
           let actionBtn = l.status === "PENDING"
-            ? `<button class="btn btn-primary btn-sm" onclick="approveLeave(${l.id})">Бекіту (Қол қою)</button>`
-            : `<span class="badge badge-green">БЕКІТІЛГЕН</span>`;
+            ? `<button class="btn btn-primary btn-sm" onclick="approveLeave(${l.id}, 'APPROVED')">Бекіту (Қол қою)</button>
+               <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="approveLeave(${l.id}, 'REJECTED')">Қайтару</button>`
+            : (l.status === "APPROVED"
+                ? `<span class="badge badge-green">БЕКІТІЛГЕН</span>`
+                : `<span class="badge badge-red">ҚАЙТАРЫЛҒАН</span>`);
 
           return `
             <tr>
@@ -453,12 +497,48 @@
       }
     }
 
-    async function approveLeave(leaveId) {
+    async function approveLeave(leaveId, status = "APPROVED") {
       try {
-        await Api.approveLeave(leaveId);
-        showToast("Анықтама бекітілді! Жылдық табельге автоматты енгізілді.", "success");
+        await Api.approveLeave(leaveId, status);
+        showToast(status === "APPROVED" ? "Анықтама бекітілді! Жылдық табельге автоматты енгізілді." : "Өтініш қайтарылды.", "success");
         loadLeaves();
         loadTimesheet();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+
+    async function loadPendingUsers() {
+      const tbody = document.getElementById("pendingUsersTable");
+      try {
+        const users = await Api.getPendingUsers();
+        document.getElementById("pendingCountBadge").innerText = users.length;
+        if (!users.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Күтіп тұрған өтініш жоқ</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td><strong>${escapeHtml(u.full_name)}</strong><br/><small style="color:var(--text-muted);">Логин: ${escapeHtml(u.username)} • Табель: ${escapeHtml(u.emp_num || "—")}</small></td>
+            <td><span class="badge badge-blue">${escapeHtml(u.role)}</span><br/><small>${escapeHtml(u.position || "")}</small></td>
+            <td style="font-size:12px;">${escapeHtml(u.organization || "")}<br/>${escapeHtml(u.subdivision || "")}</td>
+            <td style="font-size:12px;">${escapeHtml(u.phone || "")}<br/>${escapeHtml(u.email || "")}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-primary btn-sm" onclick="decideUser(${u.id}, 'APPROVE')">Растау</button>
+              <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="decideUser(${u.id}, 'REJECT')">Қабылдамау</button>
+            </td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Жүктеу қатесі: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    async function decideUser(userId, action) {
+      try {
+        const res = await Api.approveUser(userId, action);
+        showToast(res.message || "Орындалды", "success");
+        loadPendingUsers();
       } catch (err) {
         showToast("Қате: " + err.message, "danger");
       }
@@ -500,11 +580,11 @@
 
     function exportExcel() {
       const dateVal = document.getElementById("timesheetDate").value;
-      window.open(`/api/attendance/export-csv?target_date=${dateVal}`, "_blank");
+      Api.downloadTimesheetCsv(dateVal);
     }
 
     function openDocModal(url) {
-      document.getElementById("modalImg").src = url;
+      document.getElementById("modalImg").src = Api.getFileUrl(url);
       document.getElementById("docModal").classList.add("active");
     }
     function closeDocModal() {
@@ -546,6 +626,8 @@
         // 2. Load full personnel roster
         const data = await Api.getRoster();
         bossRosterData = data.records || [];
+        document.getElementById("statTotal").innerText = data.total || bossRosterData.length;
+        document.getElementById("statPresent").innerText = data.present_count ?? bossRosterData.filter(r => r.status === "PRESENT").length;
         renderBossStaffRoster();
       } catch (err) {
         console.error("Boss masters/staff load error:", err);

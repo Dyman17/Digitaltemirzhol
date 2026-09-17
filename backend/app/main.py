@@ -7,11 +7,12 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from app.core.config import STORAGE_DIR, BASE_DIR, CORS_ORIGINS
-from app.core.database import engine, Base
+from app.core.database import engine, Base, ensure_schema
 from app.routers import auth, attendance, naryad, leaves, kiosk, chat
 
 # Create database tables (runs on import; safe for Render/Vercel cold start)
-Base.metadata.create_all(bind=engine)
+# + backfill columns for DBs created by older app versions.
+ensure_schema()
 
 app = FastAPI(
     title="Digital Temirzhol Enterprise API",
@@ -22,7 +23,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
+    # Bearer-tokens in Authorization header: no cookies needed, so credentials off
+    # (browsers reject allow_credentials=True combined with "*").
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

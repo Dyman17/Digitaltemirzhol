@@ -1,18 +1,48 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
+import hashlib
+import random
+import secrets
 
 from app.core.database import get_db
-from app.core.security import hash_password, verify_password, create_access_token
-from app.core.config import FACE_PROFILES_DIR, SIGNATURES_DIR
-from app.models.models import User
+from app.core.security import (
+    hash_password, verify_password, needs_rehash, create_access_token,
+    get_current_user_optional, require_roles, MIN_PASSWORD_LENGTH,
+)
+from app.core.config import FACE_PROFILES_DIR, SIGNATURES_DIR, DEMO_SHOW_RESET_CODE
+from app.models.models import User, PasswordResetCode
 from app.schemas.schemas import UserRegister, UserLogin, UserResponse, PasswordResetRequest, PasswordResetConfirm
 from app.services.face_service import save_base64_image
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
+# Roles that require an existing BOSS to approve the new account.
+# Anyone can self-register as WORKER/MASTER; BOSS/DISPATCHER wait for approval.
+GATED_ROLES = ("BOSS", "DISPATCHER")
+
+PUBLIC_USER_FIELDS = [
+    "id", "username", "full_name", "role", "organization", "unit_code",
+    "subdivision", "iin", "birth_date", "blood_group", "rank_or_grade",
+    "safety_briefing_date", "position", "emp_num", "photo_url",
+    "signature_url", "master_id",
+]
+
+
+def user_to_dict(u: User) -> dict:
+    return {f: getattr(u, f) for f in PUBLIC_USER_FIELDS}
+
 @router.post("/register")
 def register(data: UserRegister, db: Session = Depends(get_db)):
+    if data.role not in ("WORKER", "MASTER", "DISPATCHER", "BOSS"):
+        raise HTTPException(status_code=400, detail="Белгісіз рөл")
+    if not data.password or len(data.password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Құпиясөз кем дегенде {MIN_PASSWORD_LENGTH} таңбадан тұруы тиіс",
+        )
+    if data.iin and (len(data.iin) != 12 or not data.iin.isdigit()):
+        raise HTTPException(status_code=400, detail="ЖСН 12 саннан тұруы тиіс")
     existing = db.query(User).filter(User.username == data.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="Бұл логинмен пайдаланушы тіркеліп қойған (Логин занят)")
@@ -61,6 +91,8 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         photo_url=photo_url,
         signature_url=sig_url,
         master_id=data.master_id,
+        # BOSS/DISPATCHER self-registrations wait for approval by an active BOSS
+        is_approved=(data.role not in GATED_ROLES),
         created_at=datetime.utcnow()
     )
     try:
@@ -71,30 +103,19 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Тіркеу қатесі: {str(e)}")
 
+    if not new_user.is_approved:
+        return {
+            "status": "PENDING_APPROVAL",
+            "message": "Өтінішіңіз қабылданды. Бастық аккаунтты растаған соң кіре аласыз.",
+            "user": user_to_dict(new_user),
+        }
+
     token = create_access_token({"sub": new_user.username, "role": new_user.role, "id": new_user.id})
 
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": new_user.id,
-            "username": new_user.username,
-            "full_name": new_user.full_name,
-            "role": new_user.role,
-            "organization": new_user.organization,
-            "unit_code": new_user.unit_code,
-            "subdivision": new_user.subdivision,
-            "iin": new_user.iin,
-            "birth_date": new_user.birth_date,
-            "blood_group": new_user.blood_group,
-            "rank_or_grade": new_user.rank_or_grade,
-            "safety_briefing_date": new_user.safety_briefing_date,
-            "position": new_user.position,
-            "emp_num": new_user.emp_num,
-            "photo_url": new_user.photo_url,
-            "signature_url": new_user.signature_url,
-            "master_id": new_user.master_id
-        }
+        "user": user_to_dict(new_user),
     }
 
 @router.post("/login")
@@ -103,64 +124,75 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Логин немесе құпиясөз қате")
 
+    # Transparently upgrade legacy demo hashes to PBKDF2 on successful login
+    if needs_rehash(user.password_hash):
+        user.password_hash = hash_password(data.password)
+        db.commit()
+
+    if not user.is_approved:
+        raise HTTPException(
+            status_code=403,
+            detail="Аккаунт Бастық тарапынан әлі расталмаған. Растауды күтіңіз.",
+        )
+
     token = create_access_token({"sub": user.username, "role": user.role, "id": user.id})
 
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "full_name": user.full_name,
-            "role": user.role,
-            "organization": user.organization,
-            "unit_code": user.unit_code,
-            "subdivision": user.subdivision,
-            "iin": user.iin,
-            "birth_date": user.birth_date,
-            "blood_group": user.blood_group,
-            "rank_or_grade": user.rank_or_grade,
-            "safety_briefing_date": user.safety_briefing_date,
-            "position": user.position,
-            "emp_num": user.emp_num,
-            "photo_url": user.photo_url,
-            "signature_url": user.signature_url,
-            "master_id": user.master_id
-        }
+        "user": user_to_dict(user),
     }
 
 @router.get("/users")
-def list_users(role: str = None, db: Session = Depends(get_db)):
-    query = db.query(User)
+def list_users(
+    role: str = None,
+    db: Session = Depends(get_db),
+    token_user=Depends(get_current_user_optional),
+):
+    # Only approved accounts are listed; IIN/phone stay hidden from guests.
+    query = db.query(User).filter(User.is_approved == True)  # noqa: E712
     if role:
         query = query.filter(User.role == role)
     users = query.all()
-    return [
-        {
-            "id": u.id,
-            "username": u.username,
-            "full_name": u.full_name,
-            "role": u.role,
-            "organization": u.organization,
-            "unit_code": u.unit_code,
-            "subdivision": u.subdivision,
-            "iin": u.iin,
-            "birth_date": u.birth_date,
-            "blood_group": u.blood_group,
-            "rank_or_grade": u.rank_or_grade,
-            "safety_briefing_date": u.safety_briefing_date,
-            "position": u.position,
-            "emp_num": u.emp_num,
-            "photo_url": u.photo_url,
-            "signature_url": u.signature_url,
-            "master_id": u.master_id
-        }
-        for u in users
-    ]
+    result = []
+    for u in users:
+        d = user_to_dict(u)
+        if token_user is None:
+            d.pop("iin", None)
+            d.pop("phone", None)
+            d.pop("email", None)
+        result.append(d)
+    return result
 
-import random
-import time
-RESET_CODES = {}
+
+@router.get("/pending-users")
+def pending_users(
+    db: Session = Depends(get_db),
+    boss=Depends(require_roles("BOSS")),
+):
+    """Self-registrations waiting for BOSS approval (BOSS/DISPATCHER roles)."""
+    users = db.query(User).filter(User.is_approved == False).order_by(User.id.desc()).all()  # noqa: E712
+    return [user_to_dict(u) for u in users]
+
+
+@router.post("/approve-user")
+def approve_user(
+    data: dict,
+    db: Session = Depends(get_db),
+    boss=Depends(require_roles("BOSS")),
+):
+    user_id = (data or {}).get("user_id")
+    action = (data or {}).get("action", "APPROVE")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пайдаланушы табылмады")
+    if action == "REJECT":
+        db.delete(user)
+        db.commit()
+        return {"status": "SUCCESS", "message": "Өтініш қабылданбады және жойылды"}
+    user.is_approved = True
+    db.commit()
+    return {"status": "SUCCESS", "message": f"{user.full_name} расталды, кіре алады"}
 
 def find_user_by_identifier(raw: str, db: Session):
     clean = raw.strip()
@@ -189,9 +221,16 @@ def find_user_by_identifier(raw: str, db: Session):
 
     return None
 
+RESET_CODE_TTL_MIN = 10
+
+
+def _hash_code(code: str) -> str:
+    return hashlib.sha256(f"reset:{code}".encode("utf-8")).hexdigest()
+
+
 @router.post("/reset-password/request")
 def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get_db)):
-    raw = data.identifier.strip()
+    raw = (data.identifier or "").strip()
     if not raw:
         raise HTTPException(status_code=400, detail="Телефон нөмірін немесе электрондық поштаны енгізіңіз")
 
@@ -199,14 +238,20 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
     if not user:
         raise HTTPException(status_code=404, detail="Бұл байланыс мәліметі (телефон/email) бойынша қызметкер табылмады")
 
-    code = f"{random.randint(100000, 999999)}"
-    key = user.username.lower()
-    RESET_CODES[key] = {
-        "code": code,
-        "expires_at": time.time() + 600,
-        "user_id": user.id
-    }
+    # Invalidate previous unused codes, then issue a new one (stored hashed, 10 min)
+    db.query(PasswordResetCode).filter(
+        PasswordResetCode.user_id == user.id, PasswordResetCode.used == False  # noqa: E712
+    ).update({"used": True})
+    code = f"{secrets.randbelow(900000) + 100000}"
+    db.add(PasswordResetCode(
+        user_id=user.id,
+        code_hash=_hash_code(code),
+        expires_at=datetime.utcnow() + timedelta(minutes=RESET_CODE_TTL_MIN),
+    ))
+    db.commit()
 
+    # TODO production: send `code` via SMS/email provider here.
+    # In demo mode the code is returned so it can be shown on screen.
     target_contact = user.phone or user.email or user.username
     if "@" in target_contact:
         parts = target_contact.split("@")
@@ -216,42 +261,48 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
     else:
         masked = target_contact
 
-    return {
+    resp = {
         "status": "SENT",
         "message": f"6-таңбалы растау коды ({masked}) байланысына жолданды.",
         "username": user.username,
         "masked_contact": masked,
-        "code": code
     }
+    if DEMO_SHOW_RESET_CODE:
+        resp["code"] = code
+    return resp
 
 @router.post("/reset-password/confirm")
 def confirm_password_reset(data: PasswordResetConfirm, db: Session = Depends(get_db)):
-    raw = data.identifier.strip()
-    code = data.code.strip()
-    new_pw = data.new_password.strip()
+    raw = (data.identifier or "").strip()
+    code = (data.code or "").strip()
+    new_pw = (data.new_password or "").strip()
 
-    if len(new_pw) < 4:
-        raise HTTPException(status_code=400, detail="Жаңа құпиясөз кем дегенде 4 таңбадан тұруы тиіс")
+    if len(new_pw) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Жаңа құпиясөз кем дегенде {MIN_PASSWORD_LENGTH} таңбадан тұруы тиіс",
+        )
 
     user = find_user_by_identifier(raw, db)
     if not user:
         raise HTTPException(status_code=404, detail="Қызметкер табылмады")
 
-    key = user.username.lower()
-    entry = RESET_CODES.get(key)
-    if not entry:
-        raise HTTPException(status_code=400, detail="Растау коды сұралмаған немесе мерзімі өтіп кеткен")
+    entry = db.query(PasswordResetCode).filter(
+        PasswordResetCode.user_id == user.id,
+        PasswordResetCode.used == False,  # noqa: E712
+        PasswordResetCode.code_hash == _hash_code(code),
+    ).order_by(PasswordResetCode.id.desc()).first()
 
-    if time.time() > entry["expires_at"]:
-        del RESET_CODES[key]
+    if not entry:
+        raise HTTPException(status_code=400, detail="Қате растау коды немесе код сұралмаған")
+    if entry.expires_at < datetime.utcnow():
+        entry.used = True
+        db.commit()
         raise HTTPException(status_code=400, detail="Растау кодының мерзімі өтіп кетті. Қайта сұратыңыз.")
 
-    if entry["code"] != code:
-        raise HTTPException(status_code=400, detail="Қате растау коды")
-
+    entry.used = True
     user.password_hash = hash_password(new_pw)
     db.commit()
-    del RESET_CODES[key]
 
     token = create_access_token({"sub": user.username, "role": user.role, "id": user.id})
 
@@ -259,18 +310,5 @@ def confirm_password_reset(data: PasswordResetConfirm, db: Session = Depends(get
         "status": "SUCCESS",
         "message": "Құпиясөз сәтті өзгертілді! Жүйеге кіру орындалды.",
         "access_token": token,
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "full_name": user.full_name,
-            "role": user.role,
-            "organization": user.organization,
-            "unit_code": user.unit_code,
-            "subdivision": user.subdivision,
-            "iin": user.iin,
-            "position": user.position,
-            "emp_num": user.emp_num,
-            "photo_url": user.photo_url,
-            "signature_url": user.signature_url
-        }
+        "user": user_to_dict(user),
     }

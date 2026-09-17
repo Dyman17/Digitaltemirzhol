@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Киоск QR | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1>Digital Temirzhol</h1>
+        <p>Кіреберіс экраны • Динамикалық QR</p>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <a href="checkin.html" class="nav-link">Фото-чекин</a>
+      <a href="index.html" class="nav-link">Басты бет</a>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 560px; text-align: center;">
+
+    <div class="card highlight" style="margin-bottom: 20px;">
+      <span class="badge badge-green" style="margin-bottom: 8px;">КПП ПЧ-13 (Бас проходная)</span>
+      <h2 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">
+        QR-кодты телефонмен сканерлеңіз
+      </h2>
+      <p style="color: var(--text-muted); font-size: 13.5px;">
+        Код әр <strong id="ttlLabel">30</strong> секунд сайын жаңарып отырады.
+        Скриншотпен үйден өту мүмкін емес.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 20px;">
+      <div id="qrBox" style="display: flex; justify-content: center; padding: 12px; min-height: 280px; align-items: center;">
+        <span style="color: var(--text-muted); font-size: 13px;">QR жүктелуде...</span>
+      </div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--text-muted);">
+        <span class="badge badge-blue" id="countdownBadge">--</span>
+        <span id="tokenLabel" style="font-family: var(--font-mono);"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size: 15px; margin-bottom: 8px;">Қалай өтуге болады?</h3>
+      <ol style="text-align: left; font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 20px; margin: 0;">
+        <li>Телефон камерасымен жоғарыдағы QR-кодты сканерлеңіз.</li>
+        <li>Ашылған бетте өз түріңізді камераға көрсетіңіз.</li>
+        <li><strong>«Жұмысқа келдім»</strong> немесе <strong>«Жұмыстан кеттім»</strong> батырмасын басыңыз.</li>
+      </ol>
+    </div>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    let countdownTimer = null;
+
+    function checkinUrl(token) {
+      const base = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
+      return `${base}checkin.html?k=${encodeURIComponent(token)}`;
+    }
+
+    async function refreshQr() {
+      try {
+        const data = await Api.request("/api/kiosk/token");
+        const box = document.getElementById("qrBox");
+        box.innerHTML = "";
+        new QRCode(box, {
+          text: checkinUrl(data.token),
+          width: 256,
+          height: 256,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        document.getElementById("tokenLabel").textContent = data.token;
+        startCountdown(data.expires_in || 30);
+        // Refresh right when the token rotates
+        setTimeout(refreshQr, Math.max((data.expires_in || 30) * 1000, 5000));
+      } catch (err) {
+        document.getElementById("qrBox").innerHTML =
+          `<span style="color: var(--danger, #991b1b); font-size: 13px;">Серверге қосылу жоқ: ${err.message}</span>`;
+        setTimeout(refreshQr, 5000);
+      }
+    }
+
+    function startCountdown(seconds) {
+      document.getElementById("ttlLabel").textContent = seconds;
+      let left = seconds;
+      if (countdownTimer) clearInterval(countdownTimer);
+      const badge = document.getElementById("countdownBadge");
+      badge.textContent = `${left} сек`;
+      countdownTimer = setInterval(() => {
+        left -= 1;
+        if (left <= 0) { clearInterval(countdownTimer); return; }
+        badge.textContent = `${left} сек`;
+      }, 1000);
+    }
+
+    window.addEventListener("DOMContentLoaded", refreshQr);
+  </script>
+</body>
+</html>

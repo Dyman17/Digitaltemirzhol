@@ -36,6 +36,7 @@ services:
 
   # --- Отдельный статический фронтенд (опционально; API_URL = URL сервиса выше) ---
   # После первого деплоя API вставьте его URL в env API_URL этого сайта.
+  # NOTE: без rewrites — сайт многостраничный (index/boss/master/...html).
   - type: web
     name: digitaltemirzhol-frontend
     runtime: static
@@ -43,10 +44,6 @@ services:
     rootDir: frontend
     buildCommand: 'if [ -n "$API_URL" ]; then echo "window.DT_API_BASE=\"$API_URL\";" > js/config.js; fi'
     staticPublishPath: ./
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
     envVars:
       - key: API_URL
         value: https://digitaltemirzhol-api.onrender.com

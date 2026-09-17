@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 
 from app.core.database import get_db
+from app.core.security import get_current_user_optional, require_roles
 from app.models.models import Naryad, NaryadBrigade, User, Notification
 from app.schemas.schemas import NaryadCreate, NaryadApproveBoss, NaryadPermitDispatcher, NaryadComplete
 from app.services.pdf_service import generate_naryad_pdf, create_facsimile_signature
@@ -58,17 +59,20 @@ def get_references():
     }
 
 @router.post("/create")
-def create_naryad(data: NaryadCreate, master_id: int = 2, db: Session = Depends(get_db)):
-    master = db.query(User).filter(User.id == master_id).first()
-    if not master:
-        master = db.query(User).filter(User.role == "MASTER").first()
+def create_naryad(
+    data: NaryadCreate,
+    db: Session = Depends(get_db),
+    author=Depends(require_roles("MASTER", "BOSS")),
+):
+    # The author is the logged-in master (or boss) — no more hardcoded master_id=2.
+    master = db.query(User).filter(User.id == author.id).first()
 
     count = db.query(Naryad).count() + 1
     doc_number = f"№451-2026/{count:02d}"
 
     naryad = Naryad(
         number=doc_number,
-        master_id=master.id if master else 1,
+        master_id=master.id,
         organization=data.organization,
         subdivision=data.subdivision,
         work_type=data.work_type,
@@ -128,13 +132,18 @@ def list_naryads(status: Optional[str] = None, db: Session = Depends(get_db)):
     return results
 
 @router.post("/approve-boss")
-def approve_by_boss(data: NaryadApproveBoss, db: Session = Depends(get_db)):
+def approve_by_boss(
+    data: NaryadApproveBoss,
+    db: Session = Depends(get_db),
+    boss=Depends(require_roles("BOSS")),
+):
     naryad = db.query(Naryad).filter(Naryad.id == data.naryad_id).first()
     if not naryad:
         raise HTTPException(status_code=404, detail="Наряд табылмады")
+    if naryad.status != "PENDING_BOSS":
+        raise HTTPException(status_code=400, detail="Наряд бұл кезеңде емес (уже рассмотрен)")
 
-    boss = db.query(User).filter(User.role == "BOSS").first()
-    naryad.boss_id = boss.id if boss else None
+    naryad.boss_id = boss.id
     naryad.status = "APPROVED_BOSS"
 
     # Notify Dispatcher
@@ -150,13 +159,19 @@ def approve_by_boss(data: NaryadApproveBoss, db: Session = Depends(get_db)):
     return {"status": "SUCCESS", "message": "Бастық нарядқа қол қойды және Диспетчерге жіберілді"}
 
 @router.post("/permit-dispatcher")
-def permit_by_dispatcher(data: NaryadPermitDispatcher, db: Session = Depends(get_db)):
+def permit_by_dispatcher(
+    data: NaryadPermitDispatcher,
+    db: Session = Depends(get_db),
+    # BOSS is allowed as fallback (dispatcher page is shared with BOSS role)
+    disp=Depends(require_roles("DISPATCHER", "BOSS")),
+):
     naryad = db.query(Naryad).filter(Naryad.id == data.naryad_id).first()
     if not naryad:
         raise HTTPException(status_code=404, detail="Наряд табылмады")
+    if naryad.status != "APPROVED_BOSS":
+        raise HTTPException(status_code=400, detail="Алдымен Бастық бекітуі тиіс")
 
-    disp = db.query(User).filter(User.role == "DISPATCHER").first()
-    naryad.dispatcher_id = disp.id if disp else None
+    naryad.dispatcher_id = disp.id
     naryad.status = "PERMITTED_DISPATCHER"
 
     notif = Notification(
@@ -171,10 +186,16 @@ def permit_by_dispatcher(data: NaryadPermitDispatcher, db: Session = Depends(get
     return {"status": "SUCCESS", "message": "Диспетчер рұқсат берді. Технологиялық терезе ашылды."}
 
 @router.post("/complete")
-def complete_naryad(data: NaryadComplete, db: Session = Depends(get_db)):
+def complete_naryad(
+    data: NaryadComplete,
+    db: Session = Depends(get_db),
+    closer=Depends(require_roles("MASTER", "BOSS")),
+):
     naryad = db.query(Naryad).filter(Naryad.id == data.naryad_id).first()
     if not naryad:
         raise HTTPException(status_code=404, detail="Наряд табылмады")
+    if naryad.status == "COMPLETED":
+        raise HTTPException(status_code=400, detail="Наряд әлдеқашан жабылған")
 
     naryad.status = "COMPLETED"
     naryad.actual_end = data.actual_end_time

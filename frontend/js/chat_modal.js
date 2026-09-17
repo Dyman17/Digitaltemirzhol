@@ -5,70 +5,18 @@ let currentChatTarget = null;
 let chatPollInterval = null;
 
 function getCurrentUserOrPrompt() {
-  let user = Api.getUser();
-  if (!user) {
-    // If not logged in, look for cached guest identity or prompt
-    const guest = localStorage.getItem("dt_chat_guest");
-    if (guest) {
-      try { return JSON.parse(guest); } catch(e){}
-    }
-  }
-  return user;
+  return Api.getUser();
 }
 
 function ensureCurrentUser(callback) {
-  let user = getCurrentUserOrPrompt();
+  const user = Api.getUser();
   if (user && user.id) {
     callback(user);
     return;
   }
-
-  // Quick clean modal to identify sender if anonymous
-  let modal = document.getElementById("chatSenderModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "chatSenderModal";
-    modal.className = "modal-overlay";
-    modal.innerHTML = `
-      <div class="modal-box" style="max-width: 420px;">
-        <h3 style="font-size: 16px; margin-bottom: 8px;">Чатқа кіру / Вход в чат</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-          Хабарлама жіберу үшін атыңызды таңдаңыз немесе жазыңыз:
-        </p>
-        <div style="margin-bottom: 12px;">
-          <input type="text" id="chatGuestName" class="form-control" placeholder="Аты-жөніңіз (ФИО)..." style="width:100%;">
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button class="btn btn-secondary" onclick="document.getElementById('chatSenderModal').classList.remove('active')">Бас тарту</button>
-          <button class="btn btn-primary" id="btnConfirmChatSender">Жалғастыру</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
-
-  modal.classList.add("active");
-  const btn = document.getElementById("btnConfirmChatSender");
-  btn.onclick = async () => {
-    const name = document.getElementById("chatGuestName").value.trim() || "Қызметкер";
-    // Find or create temporary guest user in DB
-    try {
-      const users = await Api.getChatUsers(name);
-      let guestUser = users.find(u => u.full_name.toLowerCase() === name.toLowerCase());
-      if (!guestUser) {
-        // Register temporary or use fallback
-        guestUser = { id: 9999, full_name: name, role: "WORKER" };
-      }
-      localStorage.setItem("dt_chat_guest", JSON.stringify(guestUser));
-      modal.classList.remove("active");
-      callback(guestUser);
-    } catch(err) {
-      const guestUser = { id: 9999, full_name: name, role: "WORKER" };
-      localStorage.setItem("dt_chat_guest", JSON.stringify(guestUser));
-      modal.classList.remove("active");
-      callback(guestUser);
-    }
-  };
+  // Chat requires a real account: no anonymous senders (anti-impersonation).
+  showToast("Чатқа жазу үшін жүйеге кіріңіз", "warning");
+  setTimeout(() => { window.location.href = "login.html"; }, 600);
 }
 
 function openChatWith(targetUserId, targetUserName, targetUserRole = "") {
@@ -102,8 +50,8 @@ function renderChatModal(currentUser, target) {
         <div>
           <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">${escapeHtml(target.name)}</div>
           <div style="font-size: 12px; color: var(--primary);">${escapeHtml(target.role || "Қызметкер")}</div>
-          <div style="font-size: 11px; color: #b45309; background:#fffbeb; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">
-            1 сағаттан кейін автоматты тазаланады (БД тазалығы)
+          <div style="font-size: 11px; color: var(--text-muted); margin-top:4px;">
+            Хабарламалар 1 сағаттан кейін автоматты тазаланады
           </div>
         </div>
         <button class="btn btn-sm btn-secondary" onclick="closeChatModal()">Жабу</button>
@@ -254,7 +202,6 @@ async function openPrintRoster(filterRole = "") {
             <th style="padding:5px;">№</th>
             <th style="padding:5px;">Бөлім / Часть</th>
             <th style="padding:5px;">Табельдік №</th>
-            <th style="padding:5px;">ЖСН / ИИН</th>
             <th style="padding:5px;">Аты-жөні (ФИО)</th>
             <th style="padding:5px;">Лауазымы</th>
             <th style="padding:5px;">Келгені</th>
@@ -269,7 +216,6 @@ async function openPrintRoster(filterRole = "") {
               <td style="padding:4px; text-align:center;">${i + 1}</td>
               <td style="padding:4px; font-size:10px;">${escapeHtml(r.organization || 'ПЧ-13')}</td>
               <td style="padding:4px; text-align:center;">${escapeHtml(r.emp_num)}</td>
-              <td style="padding:4px; text-align:center; font-family:monospace;">${escapeHtml(r.iin || '—')}</td>
               <td style="padding:4px; font-weight:bold;">${escapeHtml(r.full_name)}</td>
               <td style="padding:4px;">${escapeHtml(r.position)}</td>
               <td style="padding:4px; text-align:center;">${r.check_in_time}</td>

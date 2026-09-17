@@ -124,6 +124,9 @@
               <option value="DISPATCHER">Поезд Диспетчері (ДНЦ)</option>
               <option value="BOSS">ПЧ Бастығы (Директор)</option>
             </select>
+            <small id="roleApprovalHint" style="display:none; color:#b45309; font-size:12px; margin-top:4px;">
+              Назар аударыңыз: Бастық/Диспетчер аккаунты әрекеттегі Бастықтың растауынсыз іске қосылмайды.
+            </small>
           </div>
 
           <div class="form-group">
@@ -168,8 +171,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Құпиясөз (Пароль) *</label>
-            <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+            <label class="form-label">Құпиясөз (Пароль, кемінде 6 таңба) *</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="••••••••" minlength="6" required autocomplete="new-password">
           </div>
         </div>
       </div>
@@ -372,6 +375,8 @@
     function handleRoleSelection(role) {
       const pos = document.getElementById("regPosition");
       const masterGroup = document.getElementById("masterSelectGroup");
+      document.getElementById("roleApprovalHint").style.display =
+        (role === "BOSS" || role === "DISPATCHER") ? "block" : "none";
 
       if (role === "BOSS") {
         pos.value = "ПЧ-13 дистанциясының бастығы (Директор)";
@@ -452,11 +457,26 @@
 
       try {
         const res = await Api.register(payload);
-        Api.setUser(res.user, res.access_token);
 
         if (mediaStream) {
           mediaStream.getTracks().forEach(t => t.stop());
         }
+
+        if (res.status === "PENDING_APPROVAL") {
+          // BOSS/DISPATCHER: account waits for approval — do NOT log in.
+          document.getElementById("fullRegisterForm").innerHTML = `
+            <div class="glass-card" style="text-align:center; padding:36px 20px;">
+              <div style="font-size:15px; font-weight:800; color:var(--text-main); margin-bottom:8px;">Өтініш қабылданды</div>
+              <p style="font-size:13.5px; color:var(--text-muted); max-width:520px; margin:0 auto 16px;">
+                ${escapeHtml(res.message || "")} Кіру деректеріңіз сақталды.
+              </p>
+              <a href="login.html" class="btn btn-primary">Кіру бетіне өту</a>
+            </div>`;
+          showToast("Өтініш Бастыққа жіберілді", "success");
+          return;
+        }
+
+        Api.setUser(res.user, res.access_token);
 
         // Автоматты түрде желіге кіру (Сразу заходит в систему без повторного логина)
         window.location.replace("index.html");

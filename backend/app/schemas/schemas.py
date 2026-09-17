@@ -48,11 +48,12 @@ class UserResponse(UserBase):
 
 class AttendanceCheckIn(BaseModel):
     worker_name: Optional[str] = None
-    user_id: Optional[int] = None
+    user_id: Optional[int] = None  # legacy terminal input; ignored when JWT is present
     photo_base64: Optional[str] = None
     face_image_base64: Optional[str] = None
     action_type: str  # CHECK_IN or CHECK_OUT
     checkpoint: Optional[str] = "КПП ПЧ-13 (Бас проходная)"
+    kiosk_token: Optional[str] = None  # dynamic QR token from the entrance screen (?k=...)
 
 class AttendanceResponse(BaseModel):
     id: int

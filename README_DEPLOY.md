@@ -16,12 +16,27 @@
    - `digitaltemirzhol-frontend` (статика, опционально).
 4. Дождаться деплоя, открыть URL вида
    `https://digitaltemirzhol-api.onrender.com` — там и API (`/api/health`),
-   и весь фронтенд. Демо-логины: `boss` / `dispatcher` / `master` / `worker`
-   (пароль = логин, создаются скриптом `backend/seed_roles.py`).
+   и весь фронтенд. Демо-логины (создаются `backend/seed_roles.py`,
+   пароль = логин): `boss` / `dispatcher` / `master` / `worker`.
+   ⚠️ Это стартовые аккаунты для защиты диплома — в проде смените пароли
+   и поставьте `DEMO_SHOW_RESET_CODE=false`.
 5. В настройках `digitaltemirzhol-frontend` проверить env `API_URL` —
    должен совпадать с реальным URL API (Blueprint ставит по умолчанию
    `https://digitaltemirzhol-api.onrender.com`; если имя сервиса другое —
    поправить и сделать Manual Deploy).
+
+Важно про роли: самозванец не станет бастыгом — самостоятельная регистрация
+`BOSS`/`DISPATCHER` уходит на подтверждение действующему Бастыгу
+(вкладка «Жаңа тіркелулер» в кабинете). `WORKER`/`MASTER` входят сразу.
+
+Экран проходной: откройте `kiosk.html` на планшете у входа — там живой
+QR-код, обновляется каждые 30 сек (`KIOSK_TOKEN_TTL`). Работник сканирует →
+попадает на `checkin.html?k=...` → фото → «Келдім/Кеттім».
+
+Сброс пароля: ссылка на странице входа → код на телефон/email.
+Без SMS-шлюза код показывается на экране (демо). Для продакшена:
+`DEMO_SHOW_RESET_CODE=false` + подключить провайдера в
+`POST /api/auth/reset-password/request` (место помечено TODO).
 
 Переменные окружения API (`backend/.env.example` — образец):
 `DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS` (для продакшена лучше перечислить

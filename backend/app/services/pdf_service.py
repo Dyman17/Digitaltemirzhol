@@ -12,15 +12,31 @@ from PIL import Image as PILImage, ImageDraw, ImageFont
 
 from app.core.config import NARYAD_DIR, SIGNATURES_DIR, BASE_DIR
 
-# Register Arial for Cyrillic support
-try:
-    pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
-    pdfmetrics.registerFont(TTFont('Arial-Bold', 'C:/Windows/Fonts/arialbd.ttf'))
-    FONT_NORMAL = 'Arial'
-    FONT_BOLD = 'Arial-Bold'
-except Exception as e:
-    FONT_NORMAL = 'Helvetica'
-    FONT_BOLD = 'Helvetica-Bold'
+# Font with Cyrillic support. Priority:
+# 1) bundled DejaVu (repo: backend/app/assets) — works on Render/Linux + Windows
+# 2) system DejaVu (typical Linux) 3) Windows Arial 4) Helvetica (no Cyrillic!)
+_ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+_FONT_CANDIDATES = [
+    (_ASSETS_DIR / "DejaVuSans.ttf", _ASSETS_DIR / "DejaVuSans-Bold.ttf"),
+    (Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+     Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")),
+    (Path("C:/Windows/Fonts/arial.ttf"), Path("C:/Windows/Fonts/arialbd.ttf")),
+]
+
+
+def _register_fonts():
+    for normal, bold in _FONT_CANDIDATES:
+        try:
+            if normal.exists() and bold.exists():
+                pdfmetrics.registerFont(TTFont("DTNormal", str(normal)))
+                pdfmetrics.registerFont(TTFont("DTBold", str(bold)))
+                return "DTNormal", "DTBold"
+        except Exception:
+            continue
+    return "Helvetica", "Helvetica-Bold"
+
+
+FONT_NORMAL, FONT_BOLD = _register_fonts()
 
 def create_facsimile_signature(name: str, target_path: Path, role: str = "ПЧ"):
     """Creates a transparent PNG facsimile stamp if needed."""

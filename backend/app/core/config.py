@@ -5,10 +5,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 STORAGE_DIR = Path(os.getenv("STORAGE_DIR", str(BASE_DIR / "storage")))
 SIGNATURES_DIR = STORAGE_DIR / "signatures"
 FACE_PROFILES_DIR = STORAGE_DIR / "face_profiles"
+ATTENDANCE_DIR = STORAGE_DIR / "attendance"  # daily check-in snapshots (separate from face registry)
 LEAVES_DIR = STORAGE_DIR / "leaves_docs"
 NARYAD_DIR = STORAGE_DIR / "naryad_docs"
 
-for d in [STORAGE_DIR, SIGNATURES_DIR, FACE_PROFILES_DIR, LEAVES_DIR, NARYAD_DIR]:
+for d in [STORAGE_DIR, SIGNATURES_DIR, FACE_PROFILES_DIR, ATTENDANCE_DIR, LEAVES_DIR, NARYAD_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 
@@ -32,3 +33,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(6
 # Comma-separated list, e.g. "https://xxx.vercel.app,https://xxx.onrender.com"
 # "*" is allowed for a demo deploy; for production set explicit domains.
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+
+# Demo mode: return the password-reset code in the API response so it can be
+# shown on screen (diploma demo without SMS gateway). PRODUCTION: set false —
+# the code must go through a real SMS/email provider instead.
+DEMO_SHOW_RESET_CODE = os.getenv("DEMO_SHOW_RESET_CODE", "true").lower() in ("1", "true", "yes")
+
+# Dynamic QR lifetime in seconds (entrance-screen token rotation window)
+KIOSK_TOKEN_TTL = int(os.getenv("KIOSK_TOKEN_TTL", "30"))
