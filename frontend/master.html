@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Жол Шебері (Мастер) | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">ШЕБЕР</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Жол шебері • Сандық Наряд-допуск №451 толтыру және жабу</p>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <div style="text-align: right;">
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="masterName">Жол шебері кабинеті</div>
+        <div style="font-size: 11px; color: var(--primary);" id="masterRole">Жол шебері / Бригадир</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    
+    <div style="margin-bottom: 14px;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        ⬅️ Басты желіге қайту (Главная)
+      </a>
+    </div>
+
+    <!-- Action Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
+          «Smart Naryad» — Наряд-допуск өндірісі
+        </h2>
+        <p style="color: var(--text-muted); font-size: 13.5px;">
+          Қағазсыз онлайн наряд құрыңыз, автоматты Тех. Картаны таңдаңыз және жұмысты жабыңыз.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" onclick="openChatWithBoss()">
+          Бастыққа жазу (Личка)
+        </button>
+        <button class="btn btn-primary btn-lg" onclick="openCreateNaryadModal()">
+          Жаңа Наряд-допуск ашу (№451)
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. MY TEAM LIVE ATTENDANCE (Кім бар, кім жоқ) -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span class="badge badge-green">БРИГАДА ҚАТЫСУЫ</span>
+          </div>
+          <h3 style="font-size: 17px; margin-bottom:2px;">Менің бригадалық құрамым (Кім бар, кім жоқ)</h3>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Қарамағыңыздағы жұмысшылардың өткізу бекетінен өткендігі, фотосуреттері және жеке байланыс
+          </p>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" onclick="loadMasterBrigadeRoster()">Жаңарту</button>
+      </div>
+
+      <!-- Quick Summary Stats -->
+      <div class="grid-4" style="margin-bottom: 16px;">
+        <div class="stat-card">
+          <div class="stat-val" id="masterTeamTotal">0</div>
+          <div class="stat-label">Бригададағы жұмысшылар</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--success);" id="masterTeamPresent">0</div>
+          <div class="stat-label">Жұмыста (Есть / Бар)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:#b91c1c;" id="masterTeamAbsent">0</div>
+          <div class="stat-label">Келмеген (Нет / Жоқ)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:#b45309;" id="masterTeamLeave">0</div>
+          <div class="stat-label">Больничный / Отпуск</div>
+        </div>
+      </div>
+
+      <!-- Team Table -->
+      <div class="table-wrapper">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Фото</th>
+              <th>Жұмысшы аты-жөні</th>
+              <th>Лауазымы</th>
+              <th>Келген уақыты</th>
+              <th>Мәртебесі</th>
+              <th>Жеке байланыс</th>
+            </tr>
+          </thead>
+          <tbody id="masterBrigadeTable">
+            <tr><td colspan="6" style="text-align:center;">Жүктелуде...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Orders List -->
+    <div class="glass-card">
+      <div class="card-header">
+        <h3>Менің нарядтарымның тізімі және мәртебесі</h3>
+        <button class="btn btn-secondary btn-sm" onclick="loadMasterNaryads()">Жаңарту</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>№ Наряд</th>
+              <th>Жұмыс түрі мен Тех. карта</th>
+              <th>Орны</th>
+              <th>Жоспарлы уақыты</th>
+              <th>Мәртебесі (Статус)</th>
+              <th>Әрекет</th>
+            </tr>
+          </thead>
+          <tbody id="masterNaryadTable">
+            <tr><td colspan="6" style="text-align:center;">Жүктелуде...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Create Naryad №451 -->
+  <div class="modal-overlay" id="createNaryadModal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main);">
+          Жаңа Наряд-допуск құру (№451 бланк)
+        </h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeCreateNaryadModal()">✕</button>
+      </div>
+
+      <form id="naryadForm" onsubmit="submitNewNaryad(event)">
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Кәсіпорын</label>
+            <input type="text" id="narOrg" class="form-control" value="ПЧ-13 (Алматы дистанциясы)" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Бөлімше</label>
+            <input type="text" id="narSub" class="form-control" value="Участок №3, Околоток №10" readonly>
+          </div>
+        </div>
+
+        <!-- Work Type Dropdown with automatic Tech Card mapping -->
+        <div class="form-group">
+          <label class="form-label">Жұмыс түрі (Перечень работ) *</label>
+          <select id="narWorkType" class="form-control" onchange="onWorkTypeChange()" required>
+            <option value="">(Жұмыс түрін таңдаңыз)</option>
+            <option value="Регулировка стыковых зазоров гидравлическими разгонщиками" data-tc="ТК-16 (ҚТЖ-ЦП-2024)">
+              Регулировка стыковых зазоров гидравлическими разгонщиками
+            </option>
+            <option value="Смена рельсовых плетей бесстыкового пути" data-tc="ТК-28 (ҚТЖ-ЦП-2023)">
+              Смена рельсовых плетей бесстыкового пути
+            </option>
+            <option value="Рихтовка и рихтовочно-подбивочные работы на кривых участках" data-tc="ТК-31 (ҚТЖ-ЦП-2024)">
+              Рихтовка и рихтовочно-подбивочные работы на кривых участках
+            </option>
+            <option value="Одиночная смена стрелочного перевода и рамных рельсов" data-tc="ТК-44 (ҚТЖ-ЦП-2022)">
+              Одиночная смена стрелочного перевода и рамных рельсов
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Технологиялық карта № (Автоматты байланысады)</label>
+          <input type="text" id="narTechCard" class="form-control" style="color: var(--accent-cyan); font-weight: 700;" readonly value="ТК анықталмаған">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Жұмыс жүргізу орны (Станция, Перегон, Км, ПК) *</label>
+          <input type="text" id="narLocation" class="form-control" placeholder="Мысалы: Станция Алматы-2, Перегон 42 км, ПК-8" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Жоспарлы басталуы</label>
+            <input type="time" id="narPlanStart" class="form-control" value="09:00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Жоспарлы аяқталуы</label>
+            <input type="time" id="narPlanEnd" class="form-control" value="16:00" required>
+          </div>
+        </div>
+
+        <!-- Safety Measures Checkboxes -->
+        <div class="form-group">
+          <label class="form-label">Қауіпсіздік шаралары мен сигналдар:</label>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-main);">
+            <label><input type="checkbox" name="safetymeasure" value="ДУ-46 журналына бекітілді" checked> ДУ-46 журналына жазба түсірілді</label>
+            <label><input type="checkbox" name="safetymeasure" value="Қызыл сигналды қалқандар орнатылды" checked> Қызыл қалқандар (800 м) орнатылды</label>
+            <label><input type="checkbox" name="safetymeasure" value="Сигналист ысқырықпен сапқа қойылды" checked> Сигналист сапқа қойылды</label>
+            <label><input type="checkbox" name="safetymeasure" value="Бригадаға мақсатты нұсқама (инструктаж) жүргізілді" checked> Бригадаға мақсатты нұсқама жүргізілді</label>
+          </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateNaryadModal()">Бас тарту</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitNaryad">
+            Бастыққа бекітуге жіберу ➔
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/chat_modal.js"></script>
+  <script>
+    let currentMasterUser = null;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      currentMasterUser = Api.getUser();
+      if (!currentMasterUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      if (currentMasterUser.role !== "MASTER" && currentMasterUser.role !== "BOSS") {
+        alert("Қатынау шектелген! Бұл парақша тек Жол шеберіне (Мастер) арналған.");
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("masterName").innerText = currentMasterUser.full_name;
+      const orgInfo = currentMasterUser.organization ? ` • ${currentMasterUser.organization}` : "";
+      if (currentMasterUser.position) document.getElementById("masterRole").innerText = `${currentMasterUser.position}${orgInfo}`;
+      loadMasterBrigadeRoster();
+      loadMasterNaryads();
+      setInterval(loadMasterNaryads, 6000);
+      setInterval(loadMasterBrigadeRoster, 8000);
+    });
+
+    async function loadMasterBrigadeRoster() {
+      const tbody = document.getElementById("masterBrigadeTable");
+      try {
+        const params = { role: "WORKER" };
+        if (currentMasterUser && currentMasterUser.id) {
+          params.master_id = currentMasterUser.id;
+        }
+        let data = await Api.getRoster(params);
+        // If master has no assigned workers yet, show workers across the district so he has full team visibility
+        if (!data.records || data.records.length === 0) {
+          data = await Api.getRoster({ role: "WORKER" });
+        }
+
+        const workers = data.records || [];
+        document.getElementById("masterTeamTotal").innerText = workers.length;
+        document.getElementById("masterTeamPresent").innerText = workers.filter(w => w.status === "PRESENT").length;
+        document.getElementById("masterTeamAbsent").innerText = workers.filter(w => w.status === "ABSENT").length;
+        document.getElementById("masterTeamLeave").innerText = workers.filter(w => w.status === "LEAVE").length;
+
+        if (!workers.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--text-muted);">Бригада жұмысшылары табылмады</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = workers.map(w => {
+          let statusBadge = `<span class="badge badge-gray">ЖОҚ (КЕЛМЕГЕН)</span>`;
+          if (w.status === 'PRESENT') {
+            statusBadge = `<span class="badge badge-green">ЖҰМЫСТА (БАР)</span>`;
+          } else if (w.status === 'LEAVE') {
+            statusBadge = `<span class="badge badge-yellow">БОЛЬНИЧНЫЙ/ОТПУСК</span>`;
+          }
+
+          const photoSrc = w.photo_url ? Api.getFileUrl(w.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+          return `
+            <tr style="cursor:pointer;" onclick="${w.id ? `openChatWith(${w.id}, '${escapeJs(w.full_name)}', '${escapeJs(w.role)}')` : ''}">
+              <td><img src="${photoSrc}" class="table-photo" alt="Фото"></td>
+              <td>
+                <strong>${escapeHtml(w.full_name)}</strong>
+                <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(w.emp_num)} | ЖСН: ${escapeHtml(w.iin || '—')}</div>
+                <div style="font-size:11px; color:var(--primary); font-weight:500;">${escapeHtml(w.organization || 'ПЧ-13')} • ${escapeHtml(w.subdivision || '')}</div>
+              </td>
+              <td>${escapeHtml(w.position)}</td>
+              <td style="font-family:var(--font-mono);">${w.check_in_time}</td>
+              <td>${statusBadge}</td>
+              <td>
+                ${w.id ? `
+                  <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openChatWith(${w.id}, '${escapeJs(w.full_name)}', '${escapeJs(w.role)}')">
+                    Чат ашу (ЛС)
+                  </button>
+                ` : `<span style="font-size:11px; color:var(--text-muted);">Тіркелмеген</span>`}
+              </td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.error("Master brigade error:", err);
+      }
+    }
+
+    async function openChatWithBoss() {
+      try {
+        const bosses = await Api.getChatUsers("", "BOSS");
+        if (bosses && bosses.length > 0) {
+          const boss = bosses[0];
+          openChatWith(boss.id, boss.full_name, "ПЧ Бастығы");
+        } else {
+          // If no boss registered yet, prompt or search
+          openChatWith(1, "ПЧ Бастығы (Директор)", "BOSS");
+        }
+      } catch (err) {
+        openChatWith(1, "ПЧ Бастығы (Директор)", "BOSS");
+      }
+    }
+
+    function escapeJs(str) {
+      if (!str) return "";
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    function onWorkTypeChange() {
+      const select = document.getElementById("narWorkType");
+      const opt = select.options[select.selectedIndex];
+      const tc = opt.getAttribute("data-tc") || "ТК анықталмаған";
+      document.getElementById("narTechCard").value = tc;
+    }
+
+    function openCreateNaryadModal() {
+      document.getElementById("createNaryadModal").classList.add("active");
+    }
+    function closeCreateNaryadModal() {
+      document.getElementById("createNaryadModal").classList.remove("active");
+    }
+
+    async function loadMasterNaryads() {
+      try {
+        const naryads = await Api.getNaryads();
+        const tbody = document.getElementById("masterNaryadTable");
+
+        if (!naryads.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Әзірге нарядтар жоқ</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = naryads.map(n => {
+          let badge = `<span class="badge badge-blue">${n.status}</span>`;
+          let actionBtn = "";
+
+          if (n.status === "PENDING_BOSS") {
+            badge = `<span class="badge badge-yellow">БАСТЫҚТА (ҚОЛ КҮТУДЕ)</span>`;
+            actionBtn = `<span style="font-size:12px; color:var(--text-muted);">Бастықты күтуде</span>`;
+          } else if (n.status === "APPROVED_BOSS") {
+            badge = `<span class="badge badge-purple">ДИСПЕТЧЕРДЕ (ТЕРЕЗЕ КҮТУДЕ)</span>`;
+            actionBtn = `<span style="font-size:12px; color:var(--text-muted);">Диспетчерді күтуде</span>`;
+          } else if (n.status === "PERMITTED_DISPATCHER") {
+            badge = `<span class="badge badge-green">ЖҰМЫС ЖҮРІП ЖАТЫР</span>`;
+            actionBtn = `<button class="btn btn-danger btn-sm" onclick="completeNaryadPrompt(${n.id})">Жұмысты аяқтау (Жолды босату)</button>`;
+          } else if (n.status === "COMPLETED") {
+            badge = `<span class="badge badge-green">АЯҚТАЛДЫ</span>`;
+            if (n.pdf_path) {
+              const fileUrl = Api.getFileUrl(n.pdf_path);
+              actionBtn = `<a href="${fileUrl}" target="_blank" download class="btn btn-success btn-sm">Ресми №451 PDF (Жүктеу)</a>`;
+            }
+          }
+
+          return `
+            <tr>
+              <td><strong style="color:var(--primary);">${n.number}</strong></td>
+              <td>${n.work_type}<br/><small style="color:var(--text-muted);">${n.tech_card_no}</small></td>
+              <td>${n.location}</td>
+              <td style="font-family:var(--font-mono);">${n.plan_start} — ${n.plan_end}</td>
+              <td>${badge}</td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("Master naryad error:", err);
+      }
+    }
+
+    async function submitNewNaryad(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitNaryad");
+      btn.disabled = true;
+
+      const measures = Array.from(document.querySelectorAll("input[name='safetymeasure']:checked")).map(cb => cb.value);
+
+      const payload = {
+        organization: document.getElementById("narOrg").value,
+        subdivision: document.getElementById("narSub").value,
+        work_type: document.getElementById("narWorkType").value,
+        tech_card_no: document.getElementById("narTechCard").value,
+        location: document.getElementById("narLocation").value,
+        plan_start: document.getElementById("narPlanStart").value,
+        plan_end: document.getElementById("narPlanEnd").value,
+        safety_measures: measures
+      };
+
+      try {
+        const res = await Api.createNaryad(payload);
+        showToast(`Наряд ${res.number} сәтті құрылып, Бастыққа жолданды!`, "success");
+        closeCreateNaryadModal();
+        loadMasterNaryads();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function completeNaryadPrompt(naryadId) {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const actual = prompt("Жұмыстың нақты аяқталған уақыты (Жол босатылды):", timeStr);
+      if (!actual) return;
+
+      try {
+        const res = await Api.completeNaryad(naryadId, actual);
+        showToast("Жұмыс аяқталды! Ресми №451 сандық PDF бланкісі дайын болды.", "success");
+        loadMasterNaryads();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+  </script>
+</body>
+</html>

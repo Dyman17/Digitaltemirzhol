@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Жұмыскер Кабинеті | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">ЖҰМЫСШЫ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Жұмыскер жеке кабинеті • Табель, больничный және нарядтар</p>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <a href="checkin.html" class="nav-link" data-i18n="nav_checkin">Фото-чекин</a>
+      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 960px;">
+    
+    <div style="margin-bottom: 14px;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        ⬅️ Басты желіге қайту (Главная)
+      </a>
+    </div>
+
+    <!-- Worker Profile Overview Card -->
+    <div class="glass-card highlight" style="margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 1px solid var(--border-strong); background: #e2e8f0; display: flex; align-items: center; justify-content: center;">
+            <img id="myPhoto" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <div id="myPhotoPlaceholder" style="font-size: 14px; font-weight: 700; color: var(--text-muted);">ФОТО</div>
+          </div>
+          <div>
+            <h2 id="myName" style="font-size: 20px; font-weight: 800; color: var(--text-main);">
+              Жұмыскер кабинеті
+            </h2>
+            <p id="myPos" style="color: var(--text-muted); font-size: 13.5px;">
+              —
+            </p>
+            <div style="font-size: 12px; color: var(--primary); font-family: var(--font-mono); margin-top: 2px;">
+              Табельдік №: <span id="myEmpNum">RG-00104</span> | ЖСН: <span id="myIin">—</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Бөлім / Часть: <strong id="myOrg" style="color:var(--text-main);">ПЧ-13</strong> • <span id="mySubdivision">Участок №3</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="openChatWithMaster()">
+            Шеберге жазу (Личка)
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="openChatWithBoss()">
+            Бастыққа жазу (Личка)
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openLeaveModal()">
+            Больничный / Отпуск өтініші
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Leaves History & Recent Shifts -->
+    <div class="grid-2" style="margin-bottom: 24px;">
+      
+      <!-- Leaves History -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>Менің больничный & отпуск өтініштерім</h3>
+        </div>
+
+        <div id="myLeavesList">
+          <div style="text-align: center; color: var(--text-muted); padding: 30px 0;">
+            Жүктелуде...
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance History -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>Соңғы ауысымдар тарихы</h3>
+        </div>
+
+        <div id="myAttendanceList">
+          <div style="text-align: center; color: var(--text-muted); padding: 30px 0;">
+            Жүктелуде...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal: Submit Leave / Sick Note -->
+  <div class="modal-overlay" id="leaveModal">
+    <div class="modal-content" style="max-width: 540px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main);">
+          Анықтама немесе өтініш жүктеу
+        </h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeLeaveModal()">✕</button>
+      </div>
+
+      <form id="leaveForm" onsubmit="submitLeave(event)">
+        
+        <div class="form-group">
+          <label class="form-label">Өтініш түрі *</label>
+          <select id="leaveType" class="form-control" required>
+            <option value="SICK_LEAVE">Больничный (Еңбекке жарамсыздық парағы)</option>
+            <option value="VACATION">Отпуск (Еңбек демалысы)</option>
+            <option value="MATERNITY">Декреттік демалыс</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Басталу күні *</label>
+            <input type="date" id="leaveStart" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Аяқталу күні *</label>
+            <input type="date" id="leaveEnd" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Емхана анықтамасының фотосы / скриншоты *</label>
+          <input type="file" id="leaveFile" class="form-control" accept="image/*,.pdf" onchange="previewDoc(event)">
+          <div id="docPreviewBox" style="display: none; margin-top: 10px; text-align: center;">
+            <img id="docPreview" src="" style="max-height: 140px; border-radius: 6px; border: 1px solid var(--border-glow);">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Қосымша түсініктеме (Диагноз немесе себебі)</label>
+          <input type="text" id="leaveComment" class="form-control" placeholder="Мысалы: №4 қалалық емхана анықтамасы">
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeLeaveModal()">Бас тарту</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitLeave">
+            Бастыққа жіберу ➔
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/chat_modal.js"></script>
+  <script>
+    let docBase64 = null;
+    let currentUser = null;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      currentUser = Api.getUser();
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("myName").innerText = currentUser.full_name;
+      document.getElementById("myPos").innerText = currentUser.position || currentUser.role;
+      document.getElementById("myEmpNum").innerText = currentUser.emp_num || "—";
+      const iinEl = document.getElementById("myIin");
+      if (iinEl) iinEl.innerText = currentUser.iin || "—";
+      const orgEl = document.getElementById("myOrg");
+      if (orgEl) orgEl.innerText = currentUser.organization || "ПЧ-13";
+      const subEl = document.getElementById("mySubdivision");
+      if (subEl) subEl.innerText = currentUser.subdivision || "—";
+      
+      const photoEl = document.getElementById("myPhoto");
+      const placeholderEl = document.getElementById("myPhotoPlaceholder");
+      if (currentUser.photo_url) {
+        photoEl.src = Api.getFileUrl(currentUser.photo_url);
+        photoEl.style.display = "block";
+        placeholderEl.style.display = "none";
+      } else {
+        photoEl.style.display = "none";
+        placeholderEl.style.display = "flex";
+      }
+
+      // Default dates
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("leaveStart").value = today;
+      document.getElementById("leaveEnd").value = today;
+
+      loadMyLeaves();
+      loadMyAttendance();
+    });
+
+    function openLeaveModal() {
+      document.getElementById("leaveModal").classList.add("active");
+    }
+    function closeLeaveModal() {
+      document.getElementById("leaveModal").classList.remove("active");
+    }
+
+    function previewDoc(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          docBase64 = evt.target.result;
+          document.getElementById("docPreview").src = docBase64;
+          document.getElementById("docPreviewBox").style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function loadMyLeaves() {
+      try {
+        const leaves = await Api.getLeaves(currentUser.id);
+        const container = document.getElementById("myLeavesList");
+
+        if (!leaves.length) {
+          container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px;">Әзірге өтініштер жоқ</div>`;
+          return;
+        }
+
+        container.innerHTML = leaves.map(l => {
+          const isSick = l.leave_type === "SICK_LEAVE";
+          const typeBadge = isSick ? `<span class="badge badge-yellow">БОЛЬНИЧНЫЙ</span>` : `<span class="badge badge-green">ОТПУСК</span>`;
+          const statusBadge = l.status === "APPROVED" 
+            ? `<span class="badge badge-green">✓ БЕКІТІЛДІ (БАСТЫҚ)</span>` 
+            : `<span class="badge badge-yellow">ҚАРАЛУДА</span>`;
+
+          return `
+            <div style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:8px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                ${typeBadge}
+                ${statusBadge}
+              </div>
+              <div style="font-size:13px; color:#fff;">${l.start_date} — ${l.end_date}</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${l.comment || 'Анықтама'}</div>
+            </div>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("My leaves error:", err);
+      }
+    }
+
+    async function loadMyAttendance() {
+      try {
+        const records = await Api.getRecentAttendance();
+        const container = document.getElementById("myAttendanceList");
+
+        const myRecs = records.filter(r => r.user_id === currentUser.id || !r.user_id);
+        if (!myRecs.length) {
+          container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px;">Тіркелген ауысымдар жоқ</div>`;
+          return;
+        }
+
+        container.innerHTML = myRecs.slice(0, 5).map(r => {
+          const isCheckIn = r.action_type === "CHECK_IN";
+          const badge = isCheckIn ? `<span class="badge badge-green">КЕЛДІ</span>` : `<span class="badge badge-red">КЕТТІ</span>`;
+
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:8px; margin-bottom:8px;">
+              <div>
+                <div style="font-size:13.5px; font-weight:700; color:#fff;">${r.checkpoint}</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">${r.timestamp}</div>
+              </div>
+              <div>${badge}</div>
+            </div>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("My att error:", err);
+      }
+    }
+
+    async function submitLeave(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitLeave");
+      btn.disabled = true;
+
+      const payload = {
+        leave_type: document.getElementById("leaveType").value,
+        start_date: document.getElementById("leaveStart").value,
+        end_date: document.getElementById("leaveEnd").value,
+        document_base64: docBase64,
+        comment: document.getElementById("leaveComment").value
+      };
+
+      try {
+        await Api.createLeave(payload);
+        showToast("Өтініш Бастыққа сәтті жолданды!", "success");
+        closeLeaveModal();
+        loadMyLeaves();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function openChatWithMaster() {
+      try {
+        const masters = await Api.getChatUsers("", "MASTER");
+        if (masters && masters.length > 0) {
+          const m = masters[0];
+          openChatWith(m.id, m.full_name, "Жол шебері");
+        } else {
+          openChatWith(2, "Жол шебері (Мастер)", "MASTER");
+        }
+      } catch (err) {
+        openChatWith(2, "Жол шебері (Мастер)", "MASTER");
+      }
+    }
+
+    async function openChatWithBoss() {
+      try {
+        const bosses = await Api.getChatUsers("", "BOSS");
+        if (bosses && bosses.length > 0) {
+          const b = bosses[0];
+          openChatWith(b.id, b.full_name, "ПЧ Бастығы");
+        } else {
+          openChatWith(1, "ПЧ Бастығы (Директор)", "BOSS");
+        }
+      } catch (err) {
+        openChatWith(1, "ПЧ Бастығы (Директор)", "BOSS");
+      }
+    }
+  </script>
+</body>
+</html>

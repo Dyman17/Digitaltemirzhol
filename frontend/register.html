@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тіркелу | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Қызметкерлер желісіне тіркелу</p>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <!-- Language Switcher -->
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <a href="login.html" class="nav-link" data-i18n="nav_login">Кіру</a>
+      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 920px;">
+    
+    <!-- Title Card / Registration Notice -->
+    <div class="glass-card highlight" style="margin-bottom: 24px; border-left: 4px solid var(--accent-cyan);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="badge badge-blue" style="margin-bottom:6px;">ТІРКЕЛУ</span>
+          <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
+            Қызметкерді жүйеге тіркеу
+          </h2>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom:12px;">
+            Бұл ақпарат ҚР ҚТЖ талаптары бойынша өндірістік қауіпсіздік пен нарядтарға автоматты түрде қойылады.
+          </p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:12px;">
+            <span style="background:#f1f5f9; padding:6px 10px; border-radius:4px; font-weight:600;">1️⃣ Бөлімді таңдау</span>
+            <span style="background:#f1f5f9; padding:6px 10px; border-radius:4px; font-weight:600;">2️⃣ Аты-жөні мен ЖСН</span>
+            <span style="background:#f1f5f9; padding:6px 10px; border-radius:4px; font-weight:600;">3️⃣ Фото түсіру</span>
+            <span style="background:#f1f5f9; padding:6px 10px; border-radius:4px; font-weight:600;">4️⃣ Қол қою</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="fullRegisterForm" onsubmit="handleFullRegister(event)">
+      
+      <!-- 1. Railway Unit / Part / Division Details -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h3 style="font-size:16px;">1. Кәсіпорын және Әскери / Теміржол бөлімі (Имя части / Дистанция)</h3>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Кәсіпорын / Дистанция (Имя части) *</label>
+            <select id="regOrgSelect" class="form-control" onchange="toggleCustomOrg(this.value)">
+              <option value="ПЧ-13 (Алматы дистанциясы)">ПЧ-13 (Алматы дистанциясы)</option>
+              <option value="ПЧ-14 (Сарыөзек дистанциясы)">ПЧ-14 (Сарыөзек дистанциясы)</option>
+              <option value="ПЧ-8 (Астана дистанциясы)">ПЧ-8 (Астана дистанциясы)</option>
+              <option value="ПЧ-22 (Шымкент дистанциясы)">ПЧ-22 (Шымкент дистанциясы)</option>
+              <option value="ПЧ-1 (Ақтөбе дистанциясы)">ПЧ-1 (Ақтөбе дистанциясы)</option>
+              <option value="ШЧ-11 (Сигнализация және байланыс)">ШЧ-11 (Сигнализация және байланыс)</option>
+              <option value="ЭЧ-5 (Электрмен жабдықтау дистанциясы)">ЭЧ-5 (Электрмен жабдықтау дистанциясы)</option>
+              <option value="CUSTOM">Басқа бөлім / Әскери бөлім (Өз қолыңызбен енгізу)...</option>
+            </select>
+            <input type="text" id="regOrgCustom" class="form-control" placeholder="Бөлім / Дистанция / Әскери бөлім атауын жазыңыз..." style="display:none; margin-top:8px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Бөлім коды / Часть нөмірі (Номер/Код части) *</label>
+            <input type="text" id="regUnitCode" class="form-control" placeholder="Мысалы: ПЧ-13 немесе в/ч 25744" value="ПЧ-13" required>
+          </div>
+
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Бөлімше / Желілік бөлім / Околоток / Участок (Подразделение) *</label>
+            <input type="text" id="regSubdivision" class="form-control" placeholder="Мысалы: Участок №3, Околоток №10" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Personal Details -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h3 style="font-size:16px;">2. Жеке мәліметтер (Личные данные)</h3>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Т.А.Ә. (ФИО толық) *</label>
+            <input type="text" id="regFullName" class="form-control" placeholder="Мысалы: Бақытов Нұржан Серікұлы" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ЖСН / ИИН (12 таңбалы) *</label>
+            <input type="text" id="regIin" class="form-control" placeholder="Мысалы: 940512301245" maxlength="12" pattern="\d{12}" title="12 саннан тұруы қажет" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Professional Role -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h3 style="font-size:16px;">3. Қызметтік лауазым (Должность)</h3>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Жүйедегі қызметтік рөлі *</label>
+            <select id="regRole" class="form-control" required onchange="handleRoleSelection(this.value)">
+              <option value="WORKER">Жұмысшы (Путист, Монтер пути, Сигналист)</option>
+              <option value="MASTER">Жол шебері / Бригадир (Мастер)</option>
+              <option value="DISPATCHER">Поезд Диспетчері (ДНЦ)</option>
+              <option value="BOSS">ПЧ Бастығы (Директор)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Нақты лауазымы (Должность) *</label>
+            <input type="text" id="regPosition" class="form-control" placeholder="Мысалы: Монтер пути 4-разряда" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Табельдік нөмірі (Табельный №) *</label>
+            <input type="text" id="regEmpNum" class="form-control" placeholder="Мысалы: Т-1054" required>
+          </div>
+
+          <div class="form-group" id="masterSelectGroup">
+            <label class="form-label">Бекітілген жол шебері (Мастер):</label>
+            <select id="regMasterId" class="form-control">
+              <option value="">Жол шебері таңдалмаған (Дистанция қарамағында)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Contact & Login Information -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h3 style="font-size:16px;">4. Байланыс ақпараты және Жүйеге кіру деректері</h3>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Телефон нөмірі *</label>
+            <input type="tel" id="regPhone" class="form-control" placeholder="+7 (777) 123-45-67" required autocomplete="tel">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email поштасы</label>
+            <input type="email" id="regEmail" class="form-control" placeholder="qyzmetker@railways.kz" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Логин (Жүйеге кіру үшін) *</label>
+            <input type="text" id="regUsername" class="form-control" placeholder="nurzhan_b" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Құпиясөз (Пароль) *</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Photo Snapshot / File Upload -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <h3 style="font-size:16px;">5. Қызметкердің фотосуреті (Фотофиксация және Биометрия)</h3>
+            <p style="font-size:12px; color:var(--text-muted);">
+              Веб-камера арқылы фото түсіріңіз немесе дайын фотосуретті жүктеңіз.
+            </p>
+          </div>
+          <span class="badge badge-green" id="photoStatusBadge" style="display:none;">ФОТО ТҮСІРІЛДІ</span>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:center;">
+          <!-- Camera Viewfinder -->
+          <div style="width:320px; height:240px; background:#0f172a; border-radius:var(--radius-sm); position:relative; overflow:hidden; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:center;">
+            <video id="regCamVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+            <div id="camOffOverlay" style="position:absolute; color:#94a3b8; font-size:12px; text-align:center; display:none; padding:12px;">
+              Камера белсенді емес немесе рұқсат берілмеген. Төмендегі батырмамен файл жүктей аласыз.
+            </div>
+          </div>
+
+          <!-- Actions & Preview -->
+          <div style="display:flex; flex-direction:column; gap:10px; min-width:220px; text-align:center;">
+            <button type="button" class="btn btn-primary" onclick="captureRegPhoto()">
+              Фотосурет түсіру (Снимок)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="startRegCamera()">
+              Камераны қайта қосу
+            </button>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer; margin:0;">
+              Файлдан фото жүктеу...
+              <input type="file" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+            </label>
+            
+            <div id="photoPreviewContainer" style="display:none; margin-top:8px;">
+              <img id="photoPreviewImg" src="" style="width:90px; height:90px; border-radius:var(--radius-sm); object-fit:cover; border:2px solid var(--accent-cyan); margin:0 auto; display:block;">
+              <div style="font-size:11px; color:var(--success); font-weight:700; margin-top:4px;">Сурет бекітілді</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Digital Signature Pad -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <h3 style="font-size:16px;">6. Сандық жеке қолтаңба (Электронная подпись ЭЦП)</h3>
+            <p style="font-size:12px; color:var(--text-muted);">
+              Төмендегі ақ тақтаға тышқанмен немесе саусақпен қолыңызды қойыңыз. Ол нарядтар мен рапорттарға автоматты түрде қойылады.
+            </p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignatureCanvas()">
+            Тазалау
+          </button>
+        </div>
+
+        <div style="border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:#ffffff; height:150px; overflow:hidden;">
+          <canvas id="regSigCanvas" style="width:100%; height:100%; cursor:crosshair;"></canvas>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div style="text-align:center; margin-bottom:40px;">
+        <button type="submit" class="btn btn-primary btn-lg" style="min-width:340px; font-size:15px; padding:14px 28px;" id="btnSubmitFullReg">
+          Тіркелу және жүйеге кіру ➔
+        </button>
+      </div>
+
+    </form>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    let mediaStream = null;
+    let capturedPhotoBase64 = null;
+
+    // Signature canvas
+    const sigCanvas = document.getElementById("regSigCanvas");
+    const sigCtx = sigCanvas.getContext("2d");
+    let isDrawing = false;
+
+    function initSigCanvas() {
+      const rect = sigCanvas.getBoundingClientRect();
+      sigCanvas.width = rect.width;
+      sigCanvas.height = rect.height;
+      sigCtx.strokeStyle = "#1e3a8a";
+      sigCtx.lineWidth = 3;
+      sigCtx.lineCap = "round";
+    }
+
+    function setupCanvas() {
+      initSigCanvas();
+      window.addEventListener("resize", initSigCanvas);
+
+      const getCoords = (e) => {
+        const rect = sigCanvas.getBoundingClientRect();
+        return {
+          x: (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left,
+          y: (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top
+        };
+      };
+
+      const start = (e) => {
+        isDrawing = true;
+        const { x, y } = getCoords(e);
+        sigCtx.beginPath();
+        sigCtx.moveTo(x, y);
+      };
+      const move = (e) => {
+        if (!isDrawing) return;
+        const { x, y } = getCoords(e);
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+      };
+      const end = () => isDrawing = false;
+
+      sigCanvas.addEventListener("mousedown", start);
+      sigCanvas.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", end);
+
+      sigCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); });
+      sigCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); });
+      window.addEventListener("touchend", end);
+    }
+
+    function clearSignatureCanvas() {
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    // Camera
+    async function startRegCamera() {
+      const video = document.getElementById("regCamVideo");
+      const overlay = document.getElementById("camOffOverlay");
+      try {
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(t => t.stop());
+        }
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        video.srcObject = mediaStream;
+        overlay.style.display = "none";
+      } catch(err) {
+        console.warn("Reg camera error:", err);
+        overlay.style.display = "block";
+      }
+    }
+
+    function captureRegPhoto() {
+      const video = document.getElementById("regCamVideo");
+      if (!video || !video.videoWidth) {
+        showToast("Камера бейнесі қолжетімді емес. Файлдан жүктей аласыз.", "warning");
+        return;
+      }
+
+      const c = document.createElement("canvas");
+      c.width = video.videoWidth;
+      c.height = video.videoHeight;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(video, 0, 0, c.width, c.height);
+
+      capturedPhotoBase64 = c.toDataURL("image/jpeg", 0.85);
+      document.getElementById("photoPreviewImg").src = capturedPhotoBase64;
+      document.getElementById("photoPreviewContainer").style.display = "block";
+      document.getElementById("photoStatusBadge").style.display = "inline-flex";
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        capturedPhotoBase64 = evt.target.result;
+        document.getElementById("photoPreviewImg").src = capturedPhotoBase64;
+        document.getElementById("photoPreviewContainer").style.display = "block";
+        document.getElementById("photoStatusBadge").style.display = "inline-flex";
+        showToast("Фотосурет файлдан жүктелді", "success");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleCustomOrg(val) {
+      const customInput = document.getElementById("regOrgCustom");
+      if (val === "CUSTOM") {
+        customInput.style.display = "block";
+        customInput.required = true;
+        customInput.focus();
+      } else {
+        customInput.style.display = "none";
+        customInput.required = false;
+      }
+    }
+
+    function handleRoleSelection(role) {
+      const pos = document.getElementById("regPosition");
+      const masterGroup = document.getElementById("masterSelectGroup");
+
+      if (role === "BOSS") {
+        pos.value = "ПЧ-13 дистанциясының бастығы (Директор)";
+        masterGroup.style.display = "none";
+      } else if (role === "DISPATCHER") {
+        pos.value = "Поезд диспетчері (ДНЦ)";
+        masterGroup.style.display = "none";
+      } else if (role === "MASTER") {
+        pos.value = "Жол шебері (Участок №3)";
+        masterGroup.style.display = "none";
+      } else {
+        pos.value = "Монтер пути 4-разряда";
+        masterGroup.style.display = "block";
+      }
+    }
+
+    async function loadMasterOptions() {
+      const select = document.getElementById("regMasterId");
+      try {
+        const masters = await Api.getChatUsers("", "MASTER");
+        if (masters && masters.length > 0) {
+          select.innerHTML = `<option value="">Жол шеберін таңдаңыз...</option>` + 
+            masters.map(m => `<option value="${m.id}">${escapeHtml(m.full_name)} (${escapeHtml(m.position)})</option>`).join("");
+        }
+      } catch(e){}
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      setupCanvas();
+      startRegCamera();
+      loadMasterOptions();
+
+      const empInput = document.getElementById("regEmpNum");
+      if (empInput && (!empInput.value || empInput.value === "Т-0104")) {
+        empInput.value = "Т-" + Math.floor(1000 + Math.random() * 9000);
+      }
+    });
+
+    async function handleFullRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitFullReg");
+      btn.disabled = true;
+
+      const orgSelect = document.getElementById("regOrgSelect").value;
+      const org = (orgSelect === "CUSTOM") ? document.getElementById("regOrgCustom").value.trim() : orgSelect;
+      const unitCode = document.getElementById("regUnitCode").value.trim();
+      const subdivision = document.getElementById("regSubdivision").value.trim();
+      const fullName = document.getElementById("regFullName").value.trim();
+      const iin = document.getElementById("regIin").value.trim();
+      const role = document.getElementById("regRole").value;
+      const position = document.getElementById("regPosition").value.trim();
+      const empNum = document.getElementById("regEmpNum").value.trim() || ("Т-" + Math.floor(1000 + Math.random() * 9000));
+      const masterIdVal = document.getElementById("regMasterId").value;
+      const phone = document.getElementById("regPhone").value.trim();
+      const email = document.getElementById("regEmail") ? document.getElementById("regEmail").value.trim() : "";
+      const username = document.getElementById("regUsername").value.trim();
+      const password = document.getElementById("regPassword").value;
+
+      const sigBase64 = sigCanvas.toDataURL("image/png");
+
+      const payload = {
+        username,
+        password,
+        full_name: fullName,
+        role,
+        organization: org,
+        unit_code: unitCode,
+        subdivision,
+        iin,
+        position,
+        emp_num: empNum,
+        phone,
+        email,
+        master_id: masterIdVal ? parseInt(masterIdVal) : null,
+        photo_base64: capturedPhotoBase64,
+        signature_base64: sigBase64
+      };
+
+      try {
+        const res = await Api.register(payload);
+        Api.setUser(res.user, res.access_token);
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(t => t.stop());
+        }
+
+        // Автоматты түрде желіге кіру (Сразу заходит в систему без повторного логина)
+        window.location.replace("index.html");
+
+      } catch (err) {
+        showToast("Тіркелу қатесі: " + err.message, "danger");
+        btn.disabled = false;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

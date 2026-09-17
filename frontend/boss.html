@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бастық Кабинеті | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Начальник дистанции пути (ПЧ-13) • Басқару панелі</p>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <div style="text-align: right;">
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="bossName">Бастық кабинеті</div>
+        <div style="font-size: 11px; color: var(--primary);" id="bossRoleTitle">ПЧ Бастығы</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    
+    <div style="margin-bottom: 14px;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        ⬅️ Басты желіге қайту (Главная)
+      </a>
+    </div>
+
+    <!-- Live Notifications Ticker -->
+    <div class="glass-card" style="margin-bottom: 20px; padding: 12px 18px; border-left: 4px solid var(--primary); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase;">Соңғы хабарлама:</span>
+          <div id="latestNotif" style="font-size: 13px; color: var(--text-main); font-weight: 600;">
+            Хабарламалар жоқ.
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadNotifications()">Жаңарту</button>
+    </div>
+
+    <!-- 4 Quick Stats Cards -->
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="statNaryads">0</div>
+          <div class="stat-label">Наряд қол қоюға</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="statLeaves">0</div>
+          <div class="stat-label">Больничный / Отпуск</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="statPresent">0</div>
+          <div class="stat-label">Қазір жұмыста (Ауысым)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val">100%</div>
+          <div class="stat-label">Қауіпсіздік режимі</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; overflow-x: auto; align-items:center;">
+      <button class="btn btn-primary btn-sm tab-btn active" onclick="switchTab('tab-naryads')">
+        Наряд-допусктарды бекіту
+      </button>
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-leaves')">
+        Больничный & Отпуск бекіту
+      </button>
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-timesheet')">
+        Табель және жылдық график
+      </button>
+      <button class="btn btn-secondary btn-sm tab-btn" onclick="switchTab('tab-masters')">
+        Шеберлермен байланыс (Личка) & Толық БД
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openPrintRoster()" style="margin-left:auto; white-space:nowrap;">
+        Басып шығару (Печать)
+      </button>
+    </div>
+
+    <!-- TAB 1: NARYAD APPROVAL -->
+    <div id="tab-naryads" class="tab-content">
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>Бекітуді күтіп тұрған Наряд-допусктар (№451 бланкілері)</h3>
+          <span class="badge badge-blue" id="naryadCountBadge">0 наряд</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>№ Құжат</th>
+                <th>Жұмыс жетекшісі (Мастер)</th>
+                <th>Жұмыс түрі</th>
+                <th>Тех. карта</th>
+                <th>Орны</th>
+                <th>Мәртебесі</th>
+                <th>Әрекеттер</th>
+              </tr>
+            </thead>
+            <tbody id="bossNaryadsTable">
+              <tr><td colspan="7" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: LEAVES & DOCTOR NOTES APPROVAL -->
+    <div id="tab-leaves" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>Больничный және Отпуск анықтамаларын бекіту</h3>
+          <span class="badge badge-yellow">Анықтамалар мен өтініштер</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Қызметкер</th>
+                <th>Түрі</th>
+                <th>Мерзімі (Басталу — Аяқталу)</th>
+                <th>Емхана құжаты (Скриншот)</th>
+                <th>Мәртебесі</th>
+                <th>Қол қою / Бекіту</th>
+              </tr>
+            </thead>
+            <tbody id="bossLeavesTable">
+              <tr><td colspan="6" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: TIMESHEET & YEARLY CALENDAR -->
+    <div id="tab-timesheet" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 14px;">
+          <div>
+            <h3>Қызметкерлердің қатысу табелі (Timesheet)</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Кез келген күнді таңдап, жұмысшылардың келу/кету уақыты мен жалпы сағатын көріңіз.
+            </p>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <input type="date" id="timesheetDate" class="form-control" style="width: auto; padding: 6px 12px;" onchange="loadTimesheet()">
+            <button class="btn btn-success btn-sm" onclick="exportExcel()">
+              Excel (CSV) жүктеу
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Табель №</th>
+                <th>Қызметкер (ФИО)</th>
+                <th>Лауазымы</th>
+                <th>Кірген уақыты</th>
+                <th>Шыққан уақыты</th>
+                <th>Істеген сағаты</th>
+                <th>Мәртебесі</th>
+              </tr>
+            </thead>
+            <tbody id="timesheetTable">
+              <tr><td colspan="7" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Legend for Calendar/Timesheet -->
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; gap: 20px; font-size: 12px; color: var(--text-muted);">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 12px; height: 12px; background: #10b981; border-radius: 2px; display: inline-block;"></span>
+            <span>Жұмыста (Қатысты)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; display: inline-block;"></span>
+            <span>Больничный (Еңбекке жарамсыз)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; display: inline-block;"></span>
+            <span>Отпуск (Еңбек демалысы)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: MASTERS DIRECT PM & FULL DATABASE -->
+    <div id="tab-masters" class="tab-content" style="display: none;">
+      <!-- 1. Masters Quick PM Cards -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <div style="display:inline-flex; align-items:center; gap:6px; margin-bottom:4px;">
+              <span class="badge badge-blue">МАСТЕРЛЕР</span>
+            </div>
+            <h3 style="font-size:16px;">Жол шеберлері (Мастерлер) — Жедел жеке байланыс (Личка)</h3>
+            <p style="font-size:12px; color:var(--text-muted);">
+              Кез келген шеберге тікелей личкаға жазыңыз. Хабарламалар 1 сағаттан соң автоматты тазаланады.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadBossMastersAndStaff()">Жаңарту</button>
+        </div>
+
+        <div id="bossMastersList" class="grid-3" style="margin-top:12px;">
+          <div style="text-align:center; padding:16px; color:var(--text-muted);">Шеберлер жүктелуде...</div>
+        </div>
+      </div>
+
+      <!-- 2. Full Station Personnel Database -->
+      <div class="glass-card">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px;">Дистанция бойынша толық дерекқор (Кім бар, кім жоқ)</h3>
+            <p style="font-size:12px; color:var(--text-muted);">
+              Барлық жұмыскерлердің қатысуы, өткізу бекетінің фотосуреттері және жеке чаты
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="bossSearchStaffInput" class="form-control" placeholder="Аты-жөні немесе лауазымы..." style="min-width:220px;" oninput="filterBossStaffRoster()">
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Фото</th>
+                <th>Аты-жөні (ФИО)</th>
+                <th>Лауазымы</th>
+                <th>Рөлі</th>
+                <th>Шебері</th>
+                <th>Келгені</th>
+                <th>Кеткені</th>
+                <th>Мәртебесі</th>
+                <th>Жеке чат</th>
+              </tr>
+            </thead>
+            <tbody id="bossFullRosterTable">
+              <tr><td colspan="9" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal for Document/Screenshot View -->
+  <div class="modal-overlay" id="docModal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main);">Емхана анықтамасы / Скриншот</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeDocModal()">✕ Жабу</button>
+      </div>
+      <div style="text-align: center; background: #f8fafc; border: 1px solid var(--border-light); padding: 12px; border-radius: 4px;">
+        <img id="modalImg" src="" style="max-width: 100%; max-height: 450px; border-radius: 4px;">
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/chat_modal.js"></script>
+  <script>
+    let bossRosterData = [];
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+      document.querySelectorAll(".tab-btn").forEach(el => {
+        el.classList.remove("btn-primary", "active");
+        el.classList.add("btn-secondary");
+      });
+
+      document.getElementById(tabId).style.display = "block";
+      const activeBtn = event.currentTarget;
+      activeBtn.classList.remove("btn-secondary");
+      activeBtn.classList.add("btn-primary", "active");
+
+      if (tabId === "tab-masters") {
+        loadBossMastersAndStaff();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const u = Api.getUser();
+      if (!u) {
+        window.location.href = "login.html";
+        return;
+      }
+      if (u.role !== "BOSS") {
+        alert("Қатынау шектелген! Бұл парақша тек ПЧ Бастығына (Директорға) арналған.");
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("bossName").innerText = u.full_name;
+      const orgInfo = u.organization ? ` • ${u.organization}` : "";
+      if (u.position) document.getElementById("bossRoleTitle").innerText = `${u.position}${orgInfo}`;
+
+      // Set default date to today
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("timesheetDate").value = today;
+
+      loadNotifications();
+      loadNaryads();
+      loadLeaves();
+      loadTimesheet();
+      loadBossMastersAndStaff();
+
+      // Poll notifications every 5 seconds
+      setInterval(loadNotifications, 5000);
+      setInterval(loadBossMastersAndStaff, 10000);
+    });
+
+    async function loadNotifications() {
+      try {
+        const notifs = await Api.getNotifications("BOSS");
+        if (notifs.length) {
+          document.getElementById("latestNotif").innerText = notifs[0].message;
+        }
+      } catch (err) {
+        console.warn("Notif error:", err);
+      }
+    }
+
+    async function loadNaryads() {
+      try {
+        const naryads = await Api.getNaryads();
+        const tbody = document.getElementById("bossNaryadsTable");
+        document.getElementById("statNaryads").innerText = naryads.filter(n => n.status === "PENDING_BOSS").length;
+        document.getElementById("naryadCountBadge").innerText = `${naryads.length} наряд тіркелген`;
+
+        if (!naryads.length) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Нарядтар жоқ</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = naryads.map(n => {
+          let badge = `<span class="badge badge-blue">${n.status}</span>`;
+          let actionBtn = "";
+
+          if (n.status === "PENDING_BOSS") {
+            badge = `<span class="badge badge-yellow">ҚОЛ КҮТУДЕ</span>`;
+            actionBtn = `<button class="btn btn-primary btn-sm" onclick="approveNaryad(${n.id})">Қол қойып бекіту</button>`;
+          } else if (n.status === "APPROVED_BOSS") {
+            badge = `<span class="badge badge-blue">ДИСПЕТЧЕРДЕ</span>`;
+            actionBtn = `<span style="font-size:12px; color:var(--text-muted);">Диспетчерді күтуде</span>`;
+          } else if (n.status === "COMPLETED") {
+            badge = `<span class="badge badge-green">АЯҚТАЛДЫ</span>`;
+            if (n.pdf_path) {
+              const fileUrl = Api.getFileUrl(n.pdf_path);
+              actionBtn = `<a href="${fileUrl}" target="_blank" download class="btn btn-success btn-sm">№451 PDF (Жүктеу)</a>`;
+            }
+          }
+
+          return `
+            <tr>
+              <td><strong style="color:var(--primary);">${n.number}</strong></td>
+              <td>${n.master_name}</td>
+              <td>${n.work_type}</td>
+              <td><span class="badge badge-blue">${n.tech_card_no}</span></td>
+              <td>${n.location}</td>
+              <td>${badge}</td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("Naryad load error:", err);
+      }
+    }
+
+    async function approveNaryad(naryadId) {
+      try {
+        await Api.approveBossNaryad(naryadId);
+        showToast("Нарядқа сәтті қол қойылды және Диспетчерге жіберілді!", "success");
+        loadNaryads();
+        loadNotifications();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+
+    async function loadLeaves() {
+      try {
+        const leaves = await Api.getLeaves();
+        const tbody = document.getElementById("bossLeavesTable");
+        document.getElementById("statLeaves").innerText = leaves.filter(l => l.status === "PENDING").length;
+
+        if (!leaves.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Анықтамалар жоқ</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = leaves.map(l => {
+          const isSick = l.leave_type === "SICK_LEAVE";
+          const typeBadge = isSick ? `<span class="badge badge-yellow">БОЛЬНИЧНЫЙ</span>` : `<span class="badge badge-green">ОТПУСК</span>`;
+          
+          let docBtn = l.document_url 
+            ? `<button class="btn btn-secondary btn-sm" onclick="openDocModal('${l.document_url}')">Құжатты көру</button>`
+            : `<span style="font-size:12px; color:var(--text-faint);">Құжатсыз</span>`;
+
+          let actionBtn = l.status === "PENDING"
+            ? `<button class="btn btn-primary btn-sm" onclick="approveLeave(${l.id})">Бекіту (Қол қою)</button>`
+            : `<span class="badge badge-green">БЕКІТІЛГЕН</span>`;
+
+          return `
+            <tr>
+              <td><strong>${l.user_name}</strong><br/><small style="color:var(--text-muted);">${l.position}</small></td>
+              <td>${typeBadge}</td>
+              <td>${l.start_date} — ${l.end_date}</td>
+              <td>${docBtn}</td>
+              <td><span class="badge ${l.status === 'APPROVED' ? 'badge-green' : 'badge-yellow'}">${l.status}</span></td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("Leaves load error:", err);
+      }
+    }
+
+    async function approveLeave(leaveId) {
+      try {
+        await Api.approveLeave(leaveId);
+        showToast("Анықтама бекітілді! Жылдық табельге автоматты енгізілді.", "success");
+        loadLeaves();
+        loadTimesheet();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+
+    async function loadTimesheet() {
+      const selectedDate = document.getElementById("timesheetDate").value;
+      try {
+        const data = await Api.getTimesheet(selectedDate);
+        const tbody = document.getElementById("timesheetTable");
+        document.getElementById("statPresent").innerText = data.records.filter(r => r.check_in !== "—").length;
+
+        tbody.innerHTML = data.records.map(r => {
+          let statusBadge = `<span class="badge badge-blue">${r.status}</span>`;
+          if (r.status.includes("БОЛЬНИЧНЫЙ")) {
+            statusBadge = `<span class="badge badge-yellow">${r.status}</span>`;
+          } else if (r.status.includes("ОТПУСК")) {
+            statusBadge = `<span class="badge badge-green">${r.status}</span>`;
+          } else if (r.status === "Жұмыста") {
+            statusBadge = `<span class="badge badge-green">Жұмыста</span>`;
+          }
+
+          return `
+            <tr>
+              <td style="font-family:var(--font-mono); color:var(--accent-cyan);">${r.emp_num}</td>
+              <td><strong>${r.full_name}</strong></td>
+              <td>${r.position}</td>
+              <td style="font-family:var(--font-mono);">${r.check_in}</td>
+              <td style="font-family:var(--font-mono);">${r.check_out}</td>
+              <td><strong>${r.hours}</strong></td>
+              <td>${statusBadge}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("Timesheet error:", err);
+      }
+    }
+
+    function exportExcel() {
+      const dateVal = document.getElementById("timesheetDate").value;
+      window.open(`/api/attendance/export-csv?target_date=${dateVal}`, "_blank");
+    }
+
+    function openDocModal(url) {
+      document.getElementById("modalImg").src = url;
+      document.getElementById("docModal").classList.add("active");
+    }
+    function closeDocModal() {
+      document.getElementById("docModal").classList.remove("active");
+    }
+
+    async function loadBossMastersAndStaff() {
+      try {
+        // 1. Load masters for quick PM
+        const masters = await Api.getChatUsers("", "MASTER");
+        const mastersContainer = document.getElementById("bossMastersList");
+        if (!masters || masters.length === 0) {
+          mastersContainer.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:16px; color:var(--text-muted);">Тіркелген жол шеберлері (мастерлер) әзірге жоқ.</div>`;
+        } else {
+          mastersContainer.innerHTML = masters.map(m => {
+            const isPresent = (m.status === "PRESENT");
+            const photoSrc = m.photo_url ? Api.getFileUrl(m.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+            return `
+              <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius); padding:16px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img src="${photoSrc}" class="table-photo" style="width:48px; height:48px;" alt="Фото">
+                  <div>
+                    <strong style="color:var(--text-main); font-size:14px;">${escapeHtml(m.full_name)}</strong>
+                    <div style="font-size:11.5px; color:var(--primary); font-weight:600;">${escapeHtml(m.position || "Жол шебері")}</div>
+                    <div style="font-size:11px; margin-top:2px;">
+                      ${isPresent ? `<span class="badge badge-green">ЖҰМЫСТА</span>` : `<span class="badge badge-gray">КЕЛМЕГЕН</span>`}
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openChatWith(${m.id}, '${escapeJs(m.full_name)}', 'Жол шебері')">
+                  Личкаға жазу (Чат ашу)
+                </button>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // 2. Load full personnel roster
+        const data = await Api.getRoster();
+        bossRosterData = data.records || [];
+        renderBossStaffRoster();
+      } catch (err) {
+        console.error("Boss masters/staff load error:", err);
+      }
+    }
+
+    function filterBossStaffRoster() {
+      renderBossStaffRoster();
+    }
+
+    function renderBossStaffRoster() {
+      const tbody = document.getElementById("bossFullRosterTable");
+      const query = (document.getElementById("bossSearchStaffInput")?.value || "").toLowerCase().trim();
+
+      let filtered = bossRosterData.filter(r => {
+        if (query) {
+          const matchName = (r.full_name || "").toLowerCase().includes(query);
+          const matchPos = (r.position || "").toLowerCase().includes(query);
+          const matchNum = (r.emp_num || "").toLowerCase().includes(query);
+          if (!matchName && !matchPos && !matchNum) return false;
+        }
+        return true;
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:16px; color:var(--text-muted);">Қызметкер табылмады</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
+        let statusBadge = `<span class="badge badge-gray">ЖОҚ (КЕЛМЕГЕН)</span>`;
+        if (r.status === 'PRESENT') {
+          statusBadge = `<span class="badge badge-green">ЖҰМЫСТА (БАР)</span>`;
+        } else if (r.status === 'LEAVE') {
+          statusBadge = `<span class="badge badge-yellow">БОЛЬНИЧНЫЙ/ОТПУСК</span>`;
+        }
+
+        const photoSrc = r.photo_url ? Api.getFileUrl(r.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+        return `
+          <tr style="cursor:pointer;" onclick="${r.id ? `openChatWith(${r.id}, '${escapeJs(r.full_name)}', '${escapeJs(r.role)}')` : ''}">
+            <td><img src="${photoSrc}" class="table-photo" alt="Фото"></td>
+            <td>
+              <strong>${escapeHtml(r.full_name)}</strong>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(r.emp_num)} | ЖСН: ${escapeHtml(r.iin || '—')}</div>
+              <div style="font-size:11px; color:var(--primary); font-weight:500;">${escapeHtml(r.organization || 'ПЧ-13')} • ${escapeHtml(r.subdivision || '')}</div>
+            </td>
+            <td>${escapeHtml(r.position)}</td>
+            <td><span class="badge badge-blue">${escapeHtml(r.role)}</span></td>
+            <td>${escapeHtml(r.master_name)}</td>
+            <td style="font-family:var(--font-mono);">${r.check_in_time}</td>
+            <td style="font-family:var(--font-mono);">${r.check_out_time}</td>
+            <td>${statusBadge}</td>
+            <td>
+              ${r.id ? `
+                <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openChatWith(${r.id}, '${escapeJs(r.full_name)}', '${escapeJs(r.role)}')">
+                  Чат (ЛС)
+                </button>
+              ` : `<span style="font-size:11px; color:var(--text-muted);">Тіркелмеген</span>`}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function escapeJs(str) {
+      if (!str) return "";
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+  </script>
+</body>
+</html>

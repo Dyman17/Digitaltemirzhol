@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фото-чекин | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Clean Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p data-i18n="brand_checkin_sub">Өткізу бекеті • Фото-фиксация</p>
+      </div>
+    </a>
+    
+    <div class="nav-actions">
+      <!-- Language Switcher -->
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+
+      <a href="register.html" class="nav-link" data-i18n="nav_register">Тіркелу</a>
+      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 680px;">
+    
+    <div style="margin-bottom: 14px;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        ⬅️ Басты желіге қайту (Главная)
+      </a>
+    </div>
+
+    <!-- Top Header -->
+    <div class="card highlight" style="text-align: center; margin-bottom: 20px;">
+      <span class="badge badge-green" style="margin-bottom: 8px;" data-i18n="checkin_badge">
+        ФОТО-ТІРКЕУ БЕКЕТІ
+      </span>
+      <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 6px; color: var(--text-main);" data-i18n="checkin_title">
+        Жұмыс орнына кіру / кетуді фотоға түсіру
+      </h2>
+      <p style="color: var(--text-muted); font-size: 13.5px;" data-i18n="checkin_desc">
+        Камераға қарап, тиісті батырманы басыңыз. Фото автоматты түрде түсіріліп, дерекқорға сақталады.
+      </p>
+    </div>
+
+    <!-- Camera & Action Card -->
+    <div class="card" style="margin-bottom: 20px;">
+      
+      <!-- Camera Box -->
+      <div class="camera-box">
+        <video id="webcam" class="camera-stream" autoplay playsinline muted></video>
+        <canvas id="snapshotCanvas" style="display: none;"></canvas>
+        <div class="flash-screen" id="flashOverlay"></div>
+        
+        <div class="camera-tag">
+          <span class="camera-dot"></span>
+          <span id="cameraStatus" data-i18n="camera_active">Камера белсенді</span>
+        </div>
+      </div>
+
+      <!-- Worker Name Input -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="worker_name_label">
+          Жұмыскердің аты-жөні (Ф.И.О.):
+        </label>
+        <input 
+          type="text" 
+          id="workerNameInput" 
+          list="workersDatalist"
+          class="form-control" 
+          data-i18n-placeholder="worker_name_placeholder"
+          placeholder="Мысалы: Бақытов Нұржан (немесе бос қалдырыңыз)"
+        >
+        <datalist id="workersDatalist"></datalist>
+      </div>
+
+      <!-- Two Big Action Buttons -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button 
+          id="btnCheckIn" 
+          class="btn btn-success btn-lg" 
+          onclick="captureAndSave('CHECK_IN')"
+        >
+          <span data-i18n="btn_checkin">ЖҰМЫСҚА КЕЛДІМ (КІРУ)</span>
+        </button>
+
+        <button 
+          id="btnCheckOut" 
+          class="btn btn-danger btn-lg" 
+          onclick="captureAndSave('CHECK_OUT')"
+        >
+          <span data-i18n="btn_checkout">ЖҰМЫСТАН КЕТТІМ (ШЫҒУ)</span>
+        </button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+        <span data-i18n="checkpoint_label">Бекет: КПП ПЧ-13 (Бас өткізу орны)</span>
+        <button class="btn btn-secondary btn-sm" onclick="initCamera()" data-i18n="camera_refresh">
+          Камераны қайта қосу
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); font-size: 13px;">
+        <span style="color: var(--text-muted);">Жүйеде әлі жоқсыз ба?</span>
+        <a href="register.html" style="color: var(--primary); font-weight: 600; margin-left: 6px; text-decoration: none;">Бөлім бойынша толық тіркелу ➔</a>
+      </div>
+
+    </div>
+
+    <!-- Success Result Card -->
+    <div class="card" id="resultCard" style="display: none; border-left: 4px solid var(--success); padding: 16px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <img id="resultThumb" src="" alt="Snapshot" style="width: 64px; height: 64px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border-strong);">
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+            <span class="badge badge-green" id="resultBadge" data-i18n="checkin_success_title">СӘТТІ ТІРКЕЛДІ</span>
+            <span id="resultTime" style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);"></span>
+          </div>
+          <h3 id="resultName" style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;"></h3>
+          <p id="resultActionText" style="color: var(--text-secondary); font-size: 13px;" data-i18n="checkin_success_text">Фото базаға сәтті сақталды.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Check-ins Table -->
+    <div class="card" style="padding: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main);" data-i18n="recent_checkins_title">
+          Соңғы фото-тіркеулер (Дерекқордан)
+        </h3>
+        <button class="btn btn-secondary btn-sm" onclick="loadRecentRecords()" data-i18n="recent_refresh">
+          Жаңарту
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 60px;" data-i18n="col_photo">Фото</th>
+              <th data-i18n="col_worker">Қызметкер</th>
+              <th style="width: 130px;" data-i18n="col_action">Әрекет</th>
+              <th style="width: 140px;" data-i18n="col_time">Уақыты</th>
+            </tr>
+          </thead>
+          <tbody id="recentTableBody">
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);" data-i18n="no_records">
+                Әзірге тіркеулер жоқ
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    let videoStream = null;
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("snapshotCanvas");
+    const flash = document.getElementById("flashOverlay");
+
+    // Initialize Camera
+    async function initCamera() {
+      const statusText = document.getElementById("cameraStatus");
+      statusText.textContent = I18n.t("camera_loading");
+      try {
+        if (videoStream) {
+          videoStream.getTracks().forEach(t => t.stop());
+        }
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = videoStream;
+        await video.play();
+        statusText.textContent = I18n.t("camera_active");
+      } catch (err) {
+        console.error("Camera error:", err);
+        statusText.textContent = I18n.t("camera_error");
+      }
+    }
+
+    // Auto-fill logged in user or load registered workers datalist
+    async function initWorkersList() {
+      const curUser = Api.getUser();
+      const input = document.getElementById("workerNameInput");
+      if (curUser && curUser.full_name) {
+        input.value = curUser.full_name;
+      }
+      try {
+        const users = await Api.getUsers();
+        if (Array.isArray(users)) {
+          const datalist = document.getElementById("workersDatalist");
+          datalist.innerHTML = "";
+          users.forEach(u => {
+            const opt = document.createElement("option");
+            opt.value = u.full_name;
+            opt.label = `${u.position || I18n.t('default_worker')} (Табель: ${u.emp_num || u.id})`;
+            datalist.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        // Non-blocking
+      }
+    }
+
+    // Capture frame and send to DB
+    async function captureAndSave(actionType) {
+      const btnIn = document.getElementById("btnCheckIn");
+      const btnOut = document.getElementById("btnCheckOut");
+      btnIn.disabled = true;
+      btnOut.disabled = true;
+
+      // 1. Flash effect
+      flash.classList.add("active");
+      setTimeout(() => flash.classList.remove("active"), 120);
+
+      // 2. Capture frame from video into canvas
+      let photoBase64 = null;
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        
+        // Mirror the image to match what the user sees
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        photoBase64 = canvas.toDataURL("image/jpeg", 0.85);
+      }
+
+      const workerName = document.getElementById("workerNameInput").value.trim();
+
+      try {
+        const res = await Api.checkIn({
+          worker_name: workerName || I18n.t("default_worker"),
+          photo_base64: photoBase64,
+          action_type: actionType,
+          checkpoint: "КПП ПЧ-13 (Бас проходная)"
+        });
+
+        // Show result card
+        const resultCard = document.getElementById("resultCard");
+        const resultThumb = document.getElementById("resultThumb");
+        const resultBadge = document.getElementById("resultBadge");
+        const resultName = document.getElementById("resultName");
+        const resultActionText = document.getElementById("resultActionText");
+        const resultTime = document.getElementById("resultTime");
+
+        resultCard.style.display = "block";
+        resultThumb.src = (res.photo_url ? Api.getFileUrl(res.photo_url) : photoBase64) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        
+        const isCheckIn = actionType === "CHECK_IN";
+        resultBadge.textContent = isCheckIn ? I18n.t("action_in") : I18n.t("action_out");
+        resultBadge.className = isCheckIn ? "badge badge-green" : "badge badge-red";
+        resultName.textContent = res.worker_name || I18n.t("default_worker");
+        resultTime.textContent = res.timestamp || new Date().toLocaleTimeString();
+        resultActionText.textContent = I18n.t("checkin_success_text");
+
+        // Refresh recent table
+        await loadRecentRecords();
+
+      } catch (err) {
+        alert("Қате / Ошибка: " + (err.message || "Сервер жауап бермеді"));
+      } finally {
+        btnIn.disabled = false;
+        btnOut.disabled = false;
+      }
+    }
+
+    // Load recent checkins from database
+    async function loadRecentRecords() {
+      try {
+        const records = await Api.getRecentAttendance();
+        const tbody = document.getElementById("recentTableBody");
+        if (!records || records.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">${I18n.t("no_records")}</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = records.map(r => {
+          const isCheckIn = r.action_type === "CHECK_IN";
+          const badgeClass = isCheckIn ? "badge badge-green" : "badge badge-red";
+          const actionText = isCheckIn ? I18n.t("action_in") : I18n.t("action_out");
+          const photoSrc = r.photo_url ? Api.getFileUrl(r.photo_url) : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100";
+          return `
+            <tr>
+              <td>
+                <img src="${photoSrc}" class="table-photo" alt="Photo" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'">
+              </td>
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">${r.full_name || I18n.t('default_worker')}</div>
+                <div style="font-size: 11.5px; color: var(--text-muted);">${r.position || I18n.t('default_worker')}</div>
+              </td>
+              <td>
+                <span class="${badgeClass}">${actionText}</span>
+              </td>
+              <td style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px;">
+                ${r.timestamp}
+              </td>
+            </tr>
+          `;
+        }).join("");
+      } catch (e) {
+        console.error("Load recent records error:", e);
+      }
+    }
+
+    // Re-render when language changes
+    window.addEventListener("languageChanged", () => {
+      loadRecentRecords();
+    });
+
+    // On Load
+    window.addEventListener("DOMContentLoaded", async () => {
+      await initCamera();
+      await initWorkersList();
+      await loadRecentRecords();
+    });
+  </script>
+</body>
+</html>

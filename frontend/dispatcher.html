@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диспетчер Басқару Орталығы | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">ДНЦ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Поезд диспетчерлік орталығы • Қозғалыс қауіпсіздігі және «Тех. Окно»</p>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <div style="text-align: right;">
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);" id="dispName">Диспетчер кабинеті</div>
+        <div style="font-size: 11px; color: var(--primary);" id="dispRole">Поезд диспетчері</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="Api.logout()" data-i18n="nav_logout">Шығу</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    
+    <div style="margin-bottom: 14px;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        ⬅️ Басты желіге қайту (Главная)
+      </a>
+    </div>
+
+    <!-- Dispatcher Live Status Banner -->
+    <div class="glass-card highlight" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="badge badge-blue" style="margin-bottom: 6px;">
+            ПОЕЗДДАРДЫҢ ҚОЗҒАЛЫС КЕСТЕСІ ЖӘНЕ ҚАУІПСІЗДІК ТЕРЕЗЕСІ
+          </span>
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-main);">
+            Жол учаскелері мен нарядтарға «Технологиялық терезе» беру
+          </h2>
+          <p style="color: var(--text-secondary); font-size: 13.5px; margin-top: 4px;">
+            Бастық бекіткен нарядтарды тексеріп, поезд қозғалысын реттеу арқылы бригадаға жұмыс бастауға рұқсат беріңіз.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="openPrintRoster()">
+            Басып шығару (Печать)
+          </button>
+          <div style="background: #f8fafc; border: 1px solid var(--border-strong); padding: 10px 16px; border-radius: var(--radius); text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--text-main);" id="dispQueueCount">0</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Рұқсат күтуде</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. FULL DATABASE ACCESS: Live Presence of all personnel (Кім бар, кім жоқ) -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span class="badge badge-green">ТОЛЫҚ ДЕРЕКҚОР</span>
+          </div>
+          <h3 style="font-size: 17px; margin-bottom:2px;">Қызметкерлердің қатысуын бақылау (Кім бар, кім жоқ)</h3>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Барлық дистанция бойынша жұмыскерлердің нақты уақыттағы мәртебесі, фотосуреттері және жеке чаты
+          </p>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="dispSearchInput" class="form-control" placeholder="Аты-жөні немесе лауазымы..." style="min-width:220px;" oninput="filterDispatcherRoster()">
+          <button class="btn btn-secondary btn-sm" onclick="loadDispatcherRoster()">Жаңарту</button>
+        </div>
+      </div>
+
+      <!-- Quick Stats Counters -->
+      <div class="grid-4" style="margin-bottom: 16px;">
+        <div class="stat-card" style="cursor:pointer;" onclick="setRosterFilter('ALL')">
+          <div class="stat-val" id="dispStatTotal">0</div>
+          <div class="stat-label">Барлық қызметкерлер</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setRosterFilter('PRESENT')">
+          <div class="stat-val" style="color:var(--success);" id="dispStatPresent">0</div>
+          <div class="stat-label">Жұмыста (Есть)</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setRosterFilter('ABSENT')">
+          <div class="stat-val" style="color:#b91c1c;" id="dispStatAbsent">0</div>
+          <div class="stat-label">Келмеген (Нет)</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setRosterFilter('LEAVE')">
+          <div class="stat-val" style="color:#b45309;" id="dispStatLeave">0</div>
+          <div class="stat-label">Больничный / Отпуск</div>
+        </div>
+      </div>
+
+      <!-- Roster Table -->
+      <div class="table-wrapper">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Фото</th>
+              <th>Аты-жөні (ФИО)</th>
+              <th>Лауазымы</th>
+              <th>Рөлі</th>
+              <th>Шебері</th>
+              <th>Келгені</th>
+              <th>Кеткені</th>
+              <th>Мәртебесі</th>
+              <th>Байланыс</th>
+            </tr>
+          </thead>
+          <tbody id="dispRosterTable">
+            <tr><td colspan="9" style="text-align:center;">Жүктелуде...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Track Orders Waiting for Dispatcher Approval -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div class="card-header">
+        <h3>Бастық бекіткен және Рұқсат күткен Наряд-допусктар</h3>
+        <button class="btn btn-secondary btn-sm" onclick="loadDispatcherNaryads()">Жаңарту</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>№ Наряд</th>
+              <th>Жол шебері</th>
+              <th>Орны (Перегон / Станция)</th>
+              <th>Жұмыс түрі мен ТК</th>
+              <th>Жоспарлы терезе</th>
+              <th>Мәртебесі</th>
+              <th>Шешім (Рұқсат беру)</th>
+            </tr>
+          </thead>
+          <tbody id="dispNaryadTable">
+            <tr><td colspan="7" style="text-align:center;">Жүктелуде...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Simulated Track Sections Status (Мнемосхема) -->
+    <div class="glass-card">
+      <div class="card-header">
+        <h3>Учаскелердің ағымдағы қауіпсіздік мониторингі (Мнемосхема)</h3>
+        <span class="badge badge-green">СИГНАЛИЗАЦИЯ ҚАЛЫПТЫ</span>
+      </div>
+
+      <div class="grid-3">
+        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--text-main);">Участок №17 (42-48 км)</strong>
+            <span class="badge badge-green">АШЫҚ</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Перегон Алматы-1 — Бурундай</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Қозғалыс: Жолаушылар пойызы №003</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--text-main);">Станция Алматы-2 (Путь №1)</strong>
+            <span class="badge badge-yellow">ЖҰМЫС АЙМАҒЫ</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Стрелкалық бағыттамалар</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Жол жөндеу бригадасы</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--text-main);">Мостовой переход р. Или</strong>
+            <span class="badge badge-green">АШЫҚ</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Путевой пост 84 км</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Қозғалыс: Жүк құрамы №2841</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/chat_modal.js"></script>
+  <script>
+    let dispatcherRosterData = [];
+    let currentRosterFilter = 'ALL';
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const u = Api.getUser();
+      if (!u) {
+        window.location.href = "login.html";
+        return;
+      }
+      if (u.role !== "DISPATCHER" && u.role !== "BOSS") {
+        alert("Қатынау шектелген! Бұл парақша тек Поезд Диспетчеріне (ДНЦ) арналған.");
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("dispName").innerText = u.full_name;
+      const orgInfo = u.organization ? ` • ${u.organization}` : "";
+      if (u.position) document.getElementById("dispRole").innerText = `${u.position}${orgInfo}`;
+      loadDispatcherRoster();
+      loadDispatcherNaryads();
+      setInterval(loadDispatcherNaryads, 6000);
+      setInterval(loadDispatcherRoster, 8000);
+    });
+
+    async function loadDispatcherRoster() {
+      try {
+        const data = await Api.getRoster();
+        dispatcherRosterData = data.records || [];
+        document.getElementById("dispStatTotal").innerText = data.total || 0;
+        document.getElementById("dispStatPresent").innerText = data.present_count || 0;
+        document.getElementById("dispStatAbsent").innerText = data.absent_count || 0;
+        document.getElementById("dispStatLeave").innerText = data.leave_count || 0;
+        renderDispatcherRoster();
+      } catch (err) {
+        console.error("Roster error:", err);
+      }
+    }
+
+    function setRosterFilter(filter) {
+      currentRosterFilter = filter;
+      renderDispatcherRoster();
+    }
+
+    function filterDispatcherRoster() {
+      renderDispatcherRoster();
+    }
+
+    function renderDispatcherRoster() {
+      const tbody = document.getElementById("dispRosterTable");
+      const query = (document.getElementById("dispSearchInput")?.value || "").toLowerCase().trim();
+
+      let filtered = dispatcherRosterData.filter(r => {
+        if (currentRosterFilter !== 'ALL' && r.status !== currentRosterFilter) return false;
+        if (query) {
+          const matchName = (r.full_name || "").toLowerCase().includes(query);
+          const matchPos = (r.position || "").toLowerCase().includes(query);
+          const matchNum = (r.emp_num || "").toLowerCase().includes(query);
+          if (!matchName && !matchPos && !matchNum) return false;
+        }
+        return true;
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:16px; color:var(--text-muted);">Қызметкер табылмады</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
+        let statusBadge = `<span class="badge badge-gray">ЖОҚ (КЕЛМЕГЕН)</span>`;
+        if (r.status === 'PRESENT') {
+          statusBadge = `<span class="badge badge-green">ЖҰМЫСТА (БАР)</span>`;
+        } else if (r.status === 'LEAVE') {
+          statusBadge = `<span class="badge badge-yellow">БОЛЬНИЧНЫЙ/ОТПУСК</span>`;
+        }
+
+        const photoSrc = r.photo_url ? Api.getFileUrl(r.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+        return `
+          <tr style="cursor:pointer;" onclick="${r.id ? `openChatWith(${r.id}, '${escapeJs(r.full_name)}', '${escapeJs(r.role)}')` : ''}">
+            <td><img src="${photoSrc}" class="table-photo" alt="Фото"></td>
+            <td>
+              <strong>${escapeHtml(r.full_name)}</strong>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(r.emp_num)} | ЖСН: ${escapeHtml(r.iin || '—')}</div>
+              <div style="font-size:11px; color:var(--primary); font-weight:500;">${escapeHtml(r.organization || 'ПЧ-13')} • ${escapeHtml(r.subdivision || '')}</div>
+            </td>
+            <td>${escapeHtml(r.position)}</td>
+            <td><span class="badge badge-blue">${escapeHtml(r.role)}</span></td>
+            <td>${escapeHtml(r.master_name)}</td>
+            <td style="font-family:var(--font-mono);">${r.check_in_time}</td>
+            <td style="font-family:var(--font-mono);">${r.check_out_time}</td>
+            <td>${statusBadge}</td>
+            <td>
+              ${r.id ? `
+                <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openChatWith(${r.id}, '${escapeJs(r.full_name)}', '${escapeJs(r.role)}')">
+                  Чат (ЛС)
+                </button>
+              ` : `<span style="font-size:11px; color:var(--text-muted);">Тіркелмеген</span>`}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function escapeJs(str) {
+      if (!str) return "";
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    async function loadDispatcherNaryads() {
+      try {
+        const naryads = await Api.getNaryads();
+        const tbody = document.getElementById("dispNaryadTable");
+        const waiting = naryads.filter(n => n.status === "APPROVED_BOSS");
+        document.getElementById("dispQueueCount").innerText = waiting.length;
+
+        if (!naryads.length) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Нарядтар жоқ</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = naryads.map(n => {
+          let badge = `<span class="badge badge-blue">${n.status}</span>`;
+          let actionBtn = "";
+
+          if (n.status === "APPROVED_BOSS") {
+            badge = `<span class="badge badge-yellow">РҰҚСАТ КҮТУДЕ</span>`;
+            actionBtn = `<button class="btn btn-success btn-sm" onclick="grantWindow(${n.id})">«Тех. Терезе» беру (Рұқсат)</button>`;
+          } else if (n.status === "PERMITTED_DISPATCHER") {
+            badge = `<span class="badge badge-green">РҰҚСАТ БЕРІЛГЕН</span>`;
+            actionBtn = `<span style="font-size:12px; color:var(--success);">Терезе белсенді</span>`;
+          } else if (n.status === "COMPLETED") {
+            badge = `<span class="badge badge-blue">АЯҚТАЛҒАН</span>`;
+            if (n.pdf_path) {
+              const fileUrl = Api.getFileUrl(n.pdf_path);
+              actionBtn = `<a href="${fileUrl}" target="_blank" download class="btn btn-secondary btn-sm">№451 PDF (Жүктеу)</a>`;
+            }
+          } else {
+            badge = `<span class="badge badge-purple">БАСТЫҚТА</span>`;
+            actionBtn = `<span style="font-size:12px; color:var(--text-muted);">Бастықтың қолын күтуде</span>`;
+          }
+
+          return `
+            <tr>
+              <td><strong style="color:var(--accent-cyan);">${n.number}</strong></td>
+              <td>${n.master_name}</td>
+              <td>${n.location}</td>
+              <td>${n.work_type}<br/><small style="color:var(--accent-cyan);">${n.tech_card_no}</small></td>
+              <td style="font-family:var(--font-mono);">${n.plan_start} — ${n.plan_end}</td>
+              <td>${badge}</td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.warn("Disp error:", err);
+      }
+    }
+
+    async function grantWindow(naryadId) {
+      try {
+        await Api.permitDispatcherNaryad(naryadId);
+        showToast("Технологиялық терезе берілді! Бригадаға рұқсат ашылды.", "success");
+        loadDispatcherNaryads();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "frontend",
+  "framework": null,
+  "buildCommand": "if [ -n \"$API_URL\" ]; then echo \"window.DT_API_BASE=\\\"$API_URL\\\";\" > frontend/js/config.js; fi",
+  "rewrites": [{ "source": "/(.*)", "destination": "/$1" }]
+}

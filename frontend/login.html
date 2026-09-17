@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кіру | Digital Temirzhol</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+</head>
+<body style="display:flex; flex-direction:column; min-height:100vh;">
+
+  <!-- Enterprise Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Өндірістік жүйеге кіру</p>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+      <a href="checkin.html" class="nav-link" data-i18n="nav_checkin">Фото-чекин</a>
+      <a href="index.html" class="nav-link" data-i18n="nav_home">Басты бет</a>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 460px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+    
+    <div class="glass-card highlight" style="box-shadow: var(--shadow-md);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span class="brand-badge" style="display: inline-block; margin-bottom: 12px; font-size: 16px; padding: 6px 14px;">ҚТЖ</span>
+        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main);">Жүйеге кіру</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+          Digital Temirzhol қызметтік аккаунтыңызды енгізіңіз
+        </p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Логин *</label>
+          <input type="text" id="loginUsername" class="form-control" placeholder="Логин (мысалы: boss)" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label">Құпиясөз (Пароль) *</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <!-- Forgot Password Link -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+          <button type="button" onclick="openResetModal()" style="background: none; border: none; color: var(--primary); font-size: 12.5px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 2px 0;">
+            Құпиясөзді ұмыттыңыз ба? (Сброс пароля)
+          </button>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 16px;" id="btnLogin">
+          Кіру ➔
+        </button>
+      </form>
+
+      <!-- Quick Role Logins for seamless demo -->
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-color);">
+        <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; text-align: center;">
+          ⚡ Жылдам кіру (1 басумен таңдау):
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('boss', 'boss')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
+            👔 ПЧ Бастығы
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('dispatcher', 'dispatcher')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
+            📡 Диспетчер (ДНЦ)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('master', 'master')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
+            👷 Жол шебері
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="quickLogin('worker', 'worker')" style="font-size: 12px; justify-content: flex-start; padding: 8px 10px;">
+            🔨 Жұмысшы
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
+          Жүйеде әлі тіркелмедіңіз бе?
+        </div>
+        <a href="register.html" class="btn btn-primary" style="width: 100%; font-size: 13.5px; font-weight: 600;">
+          Жаңа қызметкерді тіркеу ➔
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= PASSWORD RESET MODAL ================= -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal-box" style="max-width: 440px;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔐</span>
+          <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main);">Құпиясөзді қалпына келтіру</h3>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeResetModal()" style="padding: 4px 8px; font-size: 14px;">✕</button>
+      </div>
+
+      <!-- Step 1: Identifier Input -->
+      <div id="resetStep1">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.45;">
+          Тіркелген <strong>телефон нөміріңізді</strong> немесе <strong>электрондық поштаңызды (email)</strong> енгізіңіз. Біз 6-таңбалы растау кодын жолдаймыз.
+        </p>
+
+        <form onsubmit="handleRequestResetCode(event)">
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label">Телефон нөмірі немесе Email *</label>
+            <input 
+              type="text" 
+              id="resetIdentifier" 
+              class="form-control" 
+              placeholder="+7 (777) 111-22-33 немесе email@railways.kz" 
+              required
+            >
+            <small style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px; display: block;">
+              Сондай-ақ қызметтік логиніңізді немесе ЖСН (ИИН) жазуға болады.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px;" id="btnSendResetCode">
+            Растау кодын алу ➔
+          </button>
+        </form>
+      </div>
+
+      <!-- Step 2: Verification Code & New Password -->
+      <div id="resetStep2" style="display: none;">
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px;">
+          <div style="font-size: 12.5px; color: #166534; font-weight: 600;" id="resetSentNotice">
+            Код жіберілді
+          </div>
+          <div id="resetDemoCodeBanner" style="font-size: 12px; color: #15803d; font-family: var(--font-mono); margin-top: 4px; font-weight: 700;">
+            <!-- Demo verification code displayed here -->
+          </div>
+        </div>
+
+        <form onsubmit="handleConfirmResetPassword(event)">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">6-таңбалы растау коды *</label>
+            <input 
+              type="text" 
+              id="resetCodeInput" 
+              class="form-control" 
+              placeholder="Мысалы: 123456" 
+              maxlength="6" 
+              pattern="\d{6}" 
+              style="font-family: var(--font-mono); letter-spacing: 3px; font-size: 16px; text-align: center;" 
+              required
+            >
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Жаңа құпиясөз (пароль) *</label>
+            <input 
+              type="password" 
+              id="resetNewPassword" 
+              class="form-control" 
+              placeholder="Кем дегенде 4 таңба" 
+              required 
+              autocomplete="new-password"
+            >
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label">Жаңа құпиясөзді қайталаңыз *</label>
+            <input 
+              type="password" 
+              id="resetConfirmPassword" 
+              class="form-control" 
+              placeholder="Құпиясөзді қайта теріңіз" 
+              required 
+              autocomplete="new-password"
+            >
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px; margin-bottom: 10px;" id="btnSubmitNewPassword">
+            Құпиясөзді жаңарту және жүйеге кіру ➔
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" onclick="backToStep1()" style="width: 100%;">
+            ⬅️ Басқа байланыс нөмірі немесе email енгізу
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    let activeResetIdentifier = "";
+
+    async function doLogin(u, p) {
+      const btn = document.getElementById("btnLogin");
+      btn.disabled = true;
+      try {
+        const res = await Api.login(u, p);
+        Api.setUser(res.user, res.access_token);
+        showToast("Сәтті кірдіңіз!", "success");
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 400);
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+        btn.disabled = false;
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("loginUsername").value.trim();
+      const p = document.getElementById("loginPassword").value;
+      doLogin(u, p);
+    }
+
+    function quickLogin(user, pass) {
+      document.getElementById("loginUsername").value = user;
+      document.getElementById("loginPassword").value = pass;
+      doLogin(user, pass);
+    }
+
+    // --- Password Reset Flow ---
+    function openResetModal() {
+      document.getElementById("resetStep1").style.display = "block";
+      document.getElementById("resetStep2").style.display = "none";
+      document.getElementById("resetIdentifier").value = document.getElementById("loginUsername").value.trim();
+      document.getElementById("resetModal").classList.add("active");
+    }
+
+    function closeResetModal() {
+      document.getElementById("resetModal").classList.remove("active");
+    }
+
+    function backToStep1() {
+      document.getElementById("resetStep1").style.display = "block";
+      document.getElementById("resetStep2").style.display = "none";
+    }
+
+    async function handleRequestResetCode(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSendResetCode");
+      const identifier = document.getElementById("resetIdentifier").value.trim();
+      if (!identifier) return;
+
+      btn.disabled = true;
+      btn.innerText = "Код жіберілуде...";
+
+      try {
+        const res = await Api.requestPasswordReset(identifier);
+        activeResetIdentifier = identifier;
+
+        document.getElementById("resetSentNotice").innerText = res.message || "Растау коды сәтті жіберілді!";
+        const demoBanner = document.getElementById("resetDemoCodeBanner");
+        if (res.code) {
+          demoBanner.innerHTML = `🔑 Растау коды: <strong style="font-size:14px; color:#0f172a; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${res.code}</strong>`;
+          document.getElementById("resetCodeInput").value = res.code;
+        } else {
+          demoBanner.innerText = "";
+        }
+
+        document.getElementById("resetStep1").style.display = "none";
+        document.getElementById("resetStep2").style.display = "block";
+        showToast("Растау коды жіберілді!", "success");
+
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Растау кодын алу ➔";
+      }
+    }
+
+    async function handleConfirmResetPassword(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitNewPassword");
+      const code = document.getElementById("resetCodeInput").value.trim();
+      const newPass = document.getElementById("resetNewPassword").value;
+      const confirmPass = document.getElementById("resetConfirmPassword").value;
+
+      if (newPass !== confirmPass) {
+        showToast("Құпиясөздер сәйкес келмейді!", "danger");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Жаңартылуда...";
+
+      try {
+        const res = await Api.confirmPasswordReset(activeResetIdentifier, code, newPass);
+        if (res.access_token && res.user) {
+          Api.setUser(res.user, res.access_token);
+        }
+        showToast("Құпиясөз сәтті жаңартылды! Жүйеге кірудесіз...", "success");
+        closeResetModal();
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 500);
+
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+        btn.disabled = false;
+        btn.innerText = "Құпиясөзді жаңарту және жүйеге кіру ➔";
+      }
+    }
+  </script>
+</body>
+</html>

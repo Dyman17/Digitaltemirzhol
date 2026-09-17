@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Temirzhol | Теміржол ішкі корпоративтік желісі</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Enterprise Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-badge">ҚТЖ</div>
+      <div class="brand-info">
+        <h1 data-i18n="brand_title">Digital Temirzhol</h1>
+        <p>Теміржол ішкі корпоративтік желісі мен өндірістік порталы</p>
+      </div>
+    </a>
+
+    <div class="nav-actions" style="display:flex; align-items:center; gap:12px;">
+      <!-- Language Switcher -->
+      <button class="btn-lang" id="btnLangToggle" title="Тілді ауыстыру / Сменить язык">
+        <strong>ҚАЗ</strong> | <span style="opacity:0.6;">РУС</span>
+      </button>
+
+      <!-- Authenticated User Capsule -->
+      <div id="navAuthCapsule" style="display:none; align-items:center; gap:10px;">
+        <img id="navAvatar" src="" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+        <div style="text-align:right;">
+          <div style="font-size:13.5px; font-weight:700; color:var(--text-main);" id="navFullName">—</div>
+          <div style="font-size:11px; color:var(--primary); font-weight:600;" id="navRoleBadge">—</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="Api.logout()" style="margin-left:4px;">Шығу</button>
+      </div>
+
+      <!-- Guest Links -->
+      <div id="navGuestCapsule" style="display:flex; gap:8px;">
+        <a href="login.html" class="btn btn-secondary btn-sm">Кіру</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Тіркелу</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container" style="max-width: 1360px;">
+
+    <!-- Guest Welcome Gateway (shown if not logged in) -->
+    <div id="guestWelcomeBanner" class="glass-card highlight" style="display:none; margin-bottom: 24px; border-left: 4px solid var(--primary);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span class="badge badge-blue">ҚТЖ ІШКІ КОРПОРАТИВТІК ЖЕЛІСІ</span>
+            <span style="font-size:12px; color:var(--text-muted);">Digital Temirzhol Network</span>
+          </div>
+          <h2 style="font-size:22px; font-weight:800; color:var(--text-main); margin-bottom:6px;">
+            Қазақстан Темір Жолының ішкі бірыңғай желісіне қош келдіңіз
+          </h2>
+          <p style="color:var(--text-muted); font-size:13.5px; max-width:760px; line-height:1.5;">
+            Бұл жүйеде бөлек парақшаларға ашық өту мүмкін емес — барлығы қызметкердің жеке рөлі мен бөлімі (имя части) арқылы реттеледі. Жүйеге кіріп немесе тіркеліп, желідегі өз қызметтік орныңызға қол жеткізіңіз.
+          </p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <a href="login.html" class="btn btn-secondary" style="font-size:14px; padding:10px 18px;">
+            Жүйеге кіру (Вход)
+          </a>
+          <a href="register.html" class="btn btn-primary" style="font-size:14px; padding:10px 18px;">
+            Тіркелу ➔
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authenticated Quick Status Banner (shown when logged in) -->
+    <div id="authWelcomeBanner" class="glass-card highlight" style="display:none; margin-bottom: 20px; border-left: 4px solid var(--accent-cyan); background: linear-gradient(135deg, rgba(240, 249, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <img id="welcomeBannerAvatar" src="" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-cyan); display:none;">
+          <div>
+            <div style="font-size:11.5px; color:var(--accent-cyan); font-weight:700; text-transform:uppercase;" id="welcomeBannerRoleTag">ЖҰМЫС ОРНЫ</div>
+            <h2 style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:2px;" id="welcomeBannerGreeting">Қош келдіңіз!</h2>
+            <div style="font-size:12.5px; color:var(--text-muted);" id="welcomeBannerOrgTag">ПЧ-13 • Участок №3</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="switchNetworkTab('service')" id="btnGoToRolePanel">
+            🛠️ Менің қызметтік панелім ➔
+          </button>
+          <button class="btn btn-success btn-sm" onclick="switchNetworkTab('checkin')">
+            📸 Фото-чекин
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authenticated Social Network Layout -->
+    <div class="network-layout" id="networkLayout">
+      
+      <!-- ================= LEFT SIDEBAR: PROFILE & NAVIGATION ================= -->
+      <aside class="network-left-sidebar">
+        
+        <!-- Authenticated User Profile Card (shown if logged in) -->
+        <div id="sidebarUserCard" class="network-user-card" style="display: none;">
+          <img id="sidebarAvatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='76' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" class="network-user-avatar" alt="Avatar">
+          <h3 id="sidebarFullName" style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">—</h3>
+          <p id="sidebarPosition" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">—</p>
+          
+          <div style="margin-bottom: 10px;">
+            <span id="sidebarRoleBadge" class="badge badge-blue">РӨЛ</span>
+            <span id="sidebarStatusBadge" class="badge badge-green" style="margin-left:4px;">БЕЛСЕНДІ</span>
+          </div>
+
+          <div style="font-size: 11.5px; color: var(--text-secondary); text-align: left; background: #f8fafc; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 5px;">
+            <div><strong>Бөлім:</strong> <span id="sidebarOrg">ПЧ-13</span></div>
+            <div><strong>Бөлімше:</strong> <span id="sidebarSubdivision">—</span></div>
+            <div><strong>ЖСН:</strong> <span id="sidebarIin" style="font-family:var(--font-mono);">—</span></div>
+            <div><strong>Табель №:</strong> <span id="sidebarEmpNum" style="font-family:var(--font-mono);">—</span></div>
+          </div>
+        </div>
+
+        <!-- Guest Authorization Card (shown if not logged in) -->
+        <div id="sidebarGuestCard" class="network-user-card" style="display: block; text-align: center; border-top: 3px solid var(--primary);">
+          <div style="width: 54px; height: 54px; border-radius: 50%; background: #eff6ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px;">
+            🚆
+          </div>
+          <span class="badge badge-blue" style="margin-bottom: 6px;">ҚОНАҚ РЕЖИМІ</span>
+          <h3 style="font-size: 14.5px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Жүйеге кіру қажет</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
+            Наряд-допуск рәсімдеу, ауысым табелі және әріптестермен жеке чатқа кіру үшін аккаунтыңызбен кіріңіз.
+          </p>
+          <a href="login.html" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 8px;">
+            Жүйеге кіру (Вход) ➔
+          </a>
+          <a href="register.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+            Тіркелу (Регистрация)
+          </a>
+        </div>
+
+        <!-- Social Network Navigation Menu -->
+        <nav class="network-nav-menu">
+          <button class="network-nav-item active" onclick="switchNetworkTab('feed')" id="navTab-feed">
+            🌐 <span>Өндірістік лента (Лента)</span>
+          </button>
+          <button class="network-nav-item" onclick="switchNetworkTab('colleagues')" id="navTab-colleagues">
+            👥 <span>Теміржолшылар желісі (Коллеги)</span>
+          </button>
+          <button class="network-nav-item" onclick="switchNetworkTab('service')" id="navTab-service">
+            🛠️ <span>Менің қызметтік панелім</span>
+          </button>
+          <button class="network-nav-item" onclick="switchNetworkTab('checkin')" id="navTab-checkin">
+            📸 <span>КПП Фото-чекин бекеті</span>
+          </button>
+          <button class="network-nav-item" onclick="openPrintRoster()">
+            📄 <span>Басып шығару (Печать)</span>
+          </button>
+        </nav>
+
+        <!-- Safety Notice Card -->
+        <div class="glass-card" style="margin-top: 16px; padding: 14px; font-size: 12px; color: var(--text-muted);">
+          <strong style="color:var(--text-main); display:block; margin-bottom:4px;">⚠️ ТБ және ПТЭ қағидасы:</strong>
+          Жолда жұмыс істеу тек наряд бекітіліп, диспетчер рұқсат бергенде ғана басталады.
+        </div>
+
+      </aside>
+
+      <!-- ================= CENTER MAIN FEED / ACTIVE TAB ================= -->
+      <section class="network-main-content">
+
+        <!-- 1. FEED TAB -->
+        <div id="tabContent-feed">
+          
+          <!-- Super Clear Big Quick Action Cards for Any User -->
+          <div class="glass-card" style="margin-bottom: 20px; padding: 16px; background: #ffffff; border: 1px solid var(--border-color);">
+            <div style="font-size:11.5px; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;">
+              ⚡ Негізгі жылдам әрекеттер (Быстрые действия)
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <button class="btn btn-success" onclick="switchNetworkTab('checkin')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+                📸 Жұмысқа келдім / кеттім
+              </button>
+              <button class="btn btn-primary" onclick="switchNetworkTab('colleagues')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+                👥 Әріптестерді табу & Чат (ЛС)
+              </button>
+              <button class="btn btn-secondary" onclick="switchNetworkTab('service')" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+                🛠️ Менің қызметтік панелім
+              </button>
+              <button class="btn btn-secondary" onclick="openPrintRoster()" style="padding:14px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+                📄 Ведомості басып шығару
+              </button>
+            </div>
+          </div>
+
+          <!-- Announcement Banner -->
+          <div class="glass-card highlight" style="margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="badge badge-green">ҚТЖ ЖЕЛІЛІК ӨНДІРІС ТАҚТАСЫ</span>
+              <span style="font-size:12px; color:var(--text-muted);" id="feedCurrentDate">Бүгін</span>
+            </div>
+            <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
+              Жедел өндірістік қатысу және ауысым жаңалықтары
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted);">
+              Барлық бөлімшелер мен околотоктар бойынша нақты уақыттағы келу-кету оқиғалары.
+            </p>
+          </div>
+
+          <!-- Live Checkins Stream Header -->
+          <div class="glass-card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <h3 style="font-size: 15px;">Өткізу бекетінен тікелей фото-ағын (КПП Фото-чекин)</h3>
+              <button class="btn btn-secondary btn-sm" onclick="loadLiveFeed()">Жаңарту</button>
+            </div>
+
+            <div id="liveFeedContainer" style="display:flex; flex-direction:column; gap:12px;">
+              <div style="text-align:center; padding:24px; color:var(--text-muted);">Ауысымдар жүктелуде...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. COLLEAGUES DIRECTORY TAB -->
+        <div id="tabContent-colleagues" style="display:none;">
+          
+          <div class="glass-card" style="margin-bottom: 20px;">
+            <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+              <div>
+                <h3 style="font-size: 16px;">ҚТЖ Қызметкерлер каталогы және Жеке чат</h3>
+                <p style="font-size: 12px; color: var(--text-muted);">
+                  Кез келген әріптесіңізді тауып, бөлімін көріңіз және жеке хабарлама (ЛС) жазыңыз.
+                </p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="networkSearchInput" class="form-control" placeholder="Аты-жөні немесе бөлімі..." style="min-width:240px;" oninput="filterColleagues(this.value)">
+                <select id="networkRoleFilter" class="form-control" style="width:auto;" onchange="loadColleagues()">
+                  <option value="">Барлық рөлдер</option>
+                  <option value="WORKER">Жұмысшылар</option>
+                  <option value="MASTER">Жол шеберлері</option>
+                  <option value="DISPATCHER">Диспетчерлер</option>
+                  <option value="BOSS">Бастықтар</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Quick Status Filters -->
+            <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+              <button class="btn btn-sm btn-primary" id="btnFilterAll" onclick="setStatusFilter('ALL')">Барлығы</button>
+              <button class="btn btn-sm btn-secondary" id="btnFilterPresent" onclick="setStatusFilter('PRESENT')">Жұмыста (Бар)</button>
+              <button class="btn btn-sm btn-secondary" id="btnFilterAbsent" onclick="setStatusFilter('ABSENT')">Келмеген (Жоқ)</button>
+            </div>
+
+            <!-- Colleagues List -->
+            <div id="colleaguesListContainer">
+              <div style="text-align:center; padding:24px; color:var(--text-muted);">Әріптестер жүктелуде...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3. ROLE-SPECIFIC SERVICE PANEL TAB -->
+        <div id="tabContent-service" style="display:none;">
+          
+          <div class="glass-card highlight" style="margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span class="badge badge-purple" id="servicePanelRoleBadge">ҚЫЗМЕТТІК ПАНЕЛЬ</span>
+              <span style="font-size:12px; color:var(--text-muted);">Рөл бойынша шектелген қолжетімділік</span>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main);" id="servicePanelTitle">
+              Менің қызметтік міндеттерім
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted);" id="servicePanelSubtitle">
+              Тек сіздің қызметтік рөліңізге арналған өндірістік құралдар.
+            </p>
+          </div>
+
+          <!-- Dynamic Role Workspace Container -->
+          <div id="roleWorkspaceContainer">
+            <!-- Will be populated dynamically based on whether user is WORKER, MASTER, BOSS, or DISPATCHER -->
+          </div>
+
+        </div>
+
+        <!-- 4. CHECK-IN TAB -->
+        <div id="tabContent-checkin" style="display:none;">
+          
+          <div class="glass-card" style="margin-bottom: 20px; max-width:640px; margin-left:auto; margin-right:auto;">
+            <div class="card-header" style="text-align:center; display:block;">
+              <span class="badge badge-green" style="margin-bottom:6px;">ӨТКІЗУ БЕКЕТІ (КПП)</span>
+              <h3 style="font-size: 18px;">Жұмысқа келу / кетуді фотоға түсіру</h3>
+              <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                Камераға қарап, тиісті түймені басыңыз. Фото дерекқорға жазылып, табельге тіркеледі.
+              </p>
+            </div>
+
+            <!-- Webcam Frame -->
+            <div style="width:100%; height:280px; background:#0f172a; border-radius:var(--radius-sm); position:relative; overflow:hidden; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+              <video id="netCamVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+              <canvas id="netCamCanvas" style="display:none;"></canvas>
+              <div id="netCamOffOverlay" style="position:absolute; color:#94a3b8; font-size:12px; text-align:center; display:none; padding:16px;">
+                Камера сөндірулі немесе рұқсат берілмеген.
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+              <button class="btn btn-success btn-lg" onclick="handleNetworkCheckin('CHECK_IN')">
+                ЖҰМЫСҚА КЕЛДІМ (КІРУ)
+              </button>
+              <button class="btn btn-danger btn-lg" onclick="handleNetworkCheckin('CHECK_OUT')">
+                ЖҰМЫСТАН КЕТТІМ (ШЫҒУ)
+              </button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
+              <span>Бекет: КПП ПЧ-13 (Бас өткізу орны)</span>
+              <button class="btn btn-secondary btn-sm" onclick="startNetworkCamera()">Камераны қайта қосу</button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================= RIGHT SIDEBAR: QUICK DUTY & ACTIONS ================= -->
+      <aside class="network-right-sidebar">
+        
+        <!-- Duty Dispatcher Widget -->
+        <div class="glass-card" style="margin-bottom: 16px;">
+          <div class="card-header" style="margin-bottom: 8px;">
+            <h4 style="font-size: 13.5px; font-weight: 700;">Кезекші Диспетчер (ДНЦ)</h4>
+            <span class="badge badge-green" style="font-size:10px;">БАЙЛАНЫСТА</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">
+            Поезд қозғалысын реттеу және «Технологиялық терезе» орталығы.
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openQuickChatWithRole('DISPATCHER')">
+            Диспетчерге жазу (ЛС)
+          </button>
+        </div>
+
+        <!-- Management Hotline Widget -->
+        <div class="glass-card" style="margin-bottom: 16px;">
+          <div class="card-header" style="margin-bottom: 8px;">
+            <h4 style="font-size: 13.5px; font-weight: 700;">ПЧ Басшылығы (Директор)</h4>
+            <span class="badge badge-blue" style="font-size:10px;">БАСҚАРУ</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">
+            Өндірістік сұрақтар мен бұйрықтарды бекіту.
+          </div>
+          <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="openQuickChatWithRole('BOSS')">
+            Бастыққа жазу (ЛС)
+          </button>
+        </div>
+
+        <!-- Shift Attendance Sheet Print Widget -->
+        <div class="glass-card" style="margin-bottom: 16px;">
+          <h4 style="font-size: 13.5px; font-weight: 700; margin-bottom: 6px;">Ауысым Табелі (Печать)</h4>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+            Бүгінгі күннің ресми қатысу ведомосін қағазға шығару.
+          </p>
+          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="openPrintRoster()">
+            Басып шығару парағы ➔
+          </button>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/chat_modal.js"></script>
+  <script>
+    let currentUser = null;
+    let colleaguesData = [];
+    let currentStatusFilter = 'ALL';
+    let netMediaStream = null;
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      currentUser = Api.getUser();
+      updateUserUI();
+
+      if (!currentUser) {
+        document.getElementById("guestWelcomeBanner").style.display = "block";
+      }
+
+      loadLiveFeed();
+      loadColleagues();
+      setInterval(loadLiveFeed, 6000);
+    });
+
+    function updateUserUI() {
+      const authCapsule = document.getElementById("navAuthCapsule");
+      const guestCapsule = document.getElementById("navGuestCapsule");
+      const authBanner = document.getElementById("authWelcomeBanner");
+      const welcome = document.getElementById("guestWelcomeBanner");
+      const sidebarUser = document.getElementById("sidebarUserCard");
+      const sidebarGuest = document.getElementById("sidebarGuestCard");
+
+      if (currentUser) {
+        authCapsule.style.display = "flex";
+        guestCapsule.style.display = "none";
+        if (welcome) welcome.style.display = "none";
+        if (sidebarUser) sidebarUser.style.display = "block";
+        if (sidebarGuest) sidebarGuest.style.display = "none";
+
+        if (authBanner) {
+          authBanner.style.display = "block";
+          document.getElementById("welcomeBannerRoleTag").innerText = formatRoleName(currentUser.role).toUpperCase();
+          document.getElementById("welcomeBannerGreeting").innerText = `Сәлеметсіз бе, ${currentUser.full_name}!`;
+          document.getElementById("welcomeBannerOrgTag").innerText = `${currentUser.organization || 'ПЧ-13'} • ${currentUser.subdivision || 'Участок №3'} • Табель: ${currentUser.emp_num || '—'}`;
+          if (currentUser.photo_url) {
+            const bAvatar = document.getElementById("welcomeBannerAvatar");
+            bAvatar.src = Api.getFileUrl(currentUser.photo_url);
+            bAvatar.style.display = "block";
+          }
+        }
+
+        document.getElementById("navFullName").innerText = currentUser.full_name;
+        document.getElementById("navRoleBadge").innerText = formatRoleName(currentUser.role);
+        if (currentUser.photo_url) {
+          document.getElementById("navAvatar").src = Api.getFileUrl(currentUser.photo_url);
+        }
+
+        // Sidebar profile
+        document.getElementById("sidebarFullName").innerText = currentUser.full_name;
+        document.getElementById("sidebarPosition").innerText = currentUser.position || currentUser.role;
+        document.getElementById("sidebarRoleBadge").innerText = formatRoleName(currentUser.role);
+        document.getElementById("sidebarOrg").innerText = currentUser.organization || "ПЧ-13";
+        document.getElementById("sidebarSubdivision").innerText = currentUser.subdivision || "—";
+        document.getElementById("sidebarIin").innerText = currentUser.iin || "—";
+        document.getElementById("sidebarEmpNum").innerText = currentUser.emp_num || "—";
+
+        if (currentUser.photo_url) {
+          document.getElementById("sidebarAvatar").src = Api.getFileUrl(currentUser.photo_url);
+        }
+
+        renderRoleServicePanel();
+      } else {
+        authCapsule.style.display = "none";
+        guestCapsule.style.display = "flex";
+        if (authBanner) authBanner.style.display = "none";
+        if (welcome) welcome.style.display = "block";
+        if (sidebarUser) sidebarUser.style.display = "none";
+        if (sidebarGuest) sidebarGuest.style.display = "block";
+      }
+    }
+
+    function formatRoleName(role) {
+      if (role === "BOSS") return "ПЧ Бастығы";
+      if (role === "DISPATCHER") return "Поезд Диспетчері";
+      if (role === "MASTER") return "Жол шебері";
+      return "Жұмысшы";
+    }
+
+    function switchNetworkTab(tabName) {
+      document.querySelectorAll(".network-nav-item").forEach(b => b.classList.remove("active"));
+      const btn = document.getElementById("navTab-" + tabName);
+      if (btn) btn.classList.add("active");
+
+      document.getElementById("tabContent-feed").style.display = (tabName === "feed") ? "block" : "none";
+      document.getElementById("tabContent-colleagues").style.display = (tabName === "colleagues") ? "block" : "none";
+      document.getElementById("tabContent-service").style.display = (tabName === "service") ? "block" : "none";
+      document.getElementById("tabContent-checkin").style.display = (tabName === "checkin") ? "block" : "none";
+
+      if (tabName === "checkin") {
+        startNetworkCamera();
+      } else if (netMediaStream) {
+        netMediaStream.getTracks().forEach(t => t.stop());
+        netMediaStream = null;
+      }
+
+      if (tabName === "service" && !currentUser) {
+        showToast("Қызметтік панельді көру үшін жүйеге кіру қажет", "warning");
+      }
+    }
+
+    // --- Live Feed ---
+    async function loadLiveFeed() {
+      try {
+        const records = await Api.getRecentAttendance(8);
+        const container = document.getElementById("liveFeedContainer");
+        if (!records || records.length === 0) {
+          container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Бүгінге әзірге тіркеулер жоқ</div>`;
+          return;
+        }
+
+        container.innerHTML = records.map(r => {
+          const isCheckIn = r.action_type === "CHECK_IN";
+          const badge = isCheckIn ? `<span class="badge badge-green">КЕЛДІ (КІРУ)</span>` : `<span class="badge badge-red">КЕТТІ (ШЫҒУ)</span>`;
+          const photoSrc = r.photo_url ? Api.getFileUrl(r.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+          return `
+            <div class="colleague-card" style="margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <img src="${photoSrc}" style="width:44px; height:44px; border-radius:var(--radius-sm); object-fit:cover; border:1px solid var(--border-color);">
+                <div>
+                  <div style="font-size:13.5px; font-weight:700; color:var(--text-main);">${escapeHtml(r.worker_name || 'Қызметкер')}</div>
+                  <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(r.checkpoint)} • <span style="font-family:var(--font-mono);">${r.timestamp}</span></div>
+                </div>
+              </div>
+              <div>${badge}</div>
+            </div>
+          `;
+        }).join("");
+      } catch(err) {
+        console.warn("Feed error:", err);
+      }
+    }
+
+    // --- Colleagues Directory ---
+    async function loadColleagues() {
+      const roleFilter = document.getElementById("networkRoleFilter")?.value || "";
+      try {
+        const users = await Api.getChatUsers("", roleFilter);
+        colleaguesData = users || [];
+        renderColleaguesList();
+      } catch(e){}
+    }
+
+    function setStatusFilter(status) {
+      currentStatusFilter = status;
+      document.getElementById("btnFilterAll").className = status === 'ALL' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+      document.getElementById("btnFilterPresent").className = status === 'PRESENT' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+      document.getElementById("btnFilterAbsent").className = status === 'ABSENT' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+      renderColleaguesList();
+    }
+
+    function filterColleagues(query) {
+      renderColleaguesList(query);
+    }
+
+    function renderColleaguesList(query = "") {
+      const container = document.getElementById("colleaguesListContainer");
+      const q = (query || document.getElementById("networkSearchInput")?.value || "").toLowerCase().trim();
+
+      let filtered = colleaguesData.filter(u => {
+        if (currentStatusFilter !== 'ALL' && u.status !== currentStatusFilter) return false;
+        if (q) {
+          const matchName = (u.full_name || "").toLowerCase().includes(q);
+          const matchOrg = (u.organization || "").toLowerCase().includes(q);
+          const matchPos = (u.position || "").toLowerCase().includes(q);
+          const matchIin = (u.iin || "").toLowerCase().includes(q);
+          if (!matchName && !matchOrg && !matchPos && !matchIin) return false;
+        }
+        return true;
+      });
+
+      if (!filtered.length) {
+        container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted);">Әріптестер табылмады</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(u => {
+        const isPresent = (u.status === "PRESENT");
+        const statusBadge = isPresent 
+          ? `<span class="badge badge-green">ЖҰМЫСТА</span>` 
+          : `<span class="badge badge-gray">КЕЛМЕГЕН</span>`;
+        const photoSrc = u.photo_url ? Api.getFileUrl(u.photo_url) : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+        return `
+          <div class="colleague-card">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <img src="${photoSrc}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid var(--border-color);">
+              <div>
+                <div style="font-size:14px; font-weight:700; color:var(--text-main);">${escapeHtml(u.full_name)}</div>
+                <div style="font-size:12px; color:var(--primary); font-weight:500;">
+                  ${escapeHtml(u.organization || 'ПЧ-13')} • ${escapeHtml(u.subdivision || 'Участок №3')}
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted);">
+                  ${escapeHtml(u.position)} | ЖСН: ${escapeHtml(u.iin || '—')} | Табель: ${escapeHtml(u.emp_num)}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+              ${statusBadge}
+              <button class="btn btn-primary btn-sm" onclick="openChatWith(${u.id}, '${escapeJs(u.full_name)}', '${escapeJs(u.role)}')">
+                Чат (ЛС)
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // --- Role-Specific Service Panel Generator ---
+    function renderRoleServicePanel() {
+      const container = document.getElementById("roleWorkspaceContainer");
+      if (!currentUser) {
+        container.innerHTML = `
+          <div class="glass-card" style="text-align:center; padding:36px 20px;">
+            <div style="font-size:32px; margin-bottom:8px;">🔒</div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--text-main); margin-bottom:6px;">Қызметтік панель жабық</h3>
+            <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto 16px;">
+              Бұл бөлім қызметкердің лауазымына (ПЧ Бастығы, Диспетчер, Жол шебері, Жұмысшы) сәйкес арнайы өндірістік құралдарды ашады.
+            </p>
+            <div style="display:flex; justify-content:center; gap:10px;">
+              <a href="login.html" class="btn btn-primary">Жүйеге кіру (Вход) ➔</a>
+              <a href="register.html" class="btn btn-secondary">Тіркелу</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const role = currentUser.role;
+      document.getElementById("servicePanelRoleBadge").innerText = formatRoleName(role).toUpperCase();
+
+      if (role === "WORKER") {
+        document.getElementById("servicePanelTitle").innerText = "Жұмысшының жеке қызметтік панелі";
+        document.getElementById("servicePanelSubtitle").innerText = "Өз ауысымдарыңызды қараңыз, больничный/отпуск өтінішін беріңіз немесе шеберге хабарласыңыз.";
+        container.innerHTML = `
+          <div class="grid-2">
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Ауысым және Табель мәртебесі</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Бүгінгі өткізу бекетіндегі тіркелуіңіз бен табельдік мәртебеңіз.
+              </p>
+              <button class="btn btn-success" onclick="switchNetworkTab('checkin')">Өткізу бекетіне өту (Чекин)</button>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Емхана анықтамасы (Больничный / Отпуск)</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Емханадан алынған анықтаманы фото/скриншот түрінде жүктеп, Бастыққа бекітуге жіберіңіз.
+              </p>
+              <a href="worker.html" class="btn btn-primary">Больничный өтінішін ашу ➔</a>
+            </div>
+          </div>
+        `;
+      } else if (role === "MASTER") {
+        document.getElementById("servicePanelTitle").innerText = "Жол шеберінің қызметтік панелі";
+        document.getElementById("servicePanelSubtitle").innerText = "Өз бригадаңызды бақылаңыз (кім бар, кім жоқ) және №451 Наряд-допуск рәсімдеңіз.";
+        container.innerHTML = `
+          <div class="grid-2">
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Менің бригадалық құрамым</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Қарамағыңыздағы жұмысшылардың қатысуы, келген-кеткен уақыты мен фотосы.
+              </p>
+              <a href="master.html" class="btn btn-primary">Бригаданы басқару және Наряд толтыру ➔</a>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Бастықпен жедел байланыс</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Наряд пен өндірістік жұмыстар бойынша ПЧ Бастығымен личкаға хат алмасу.
+              </p>
+              <button class="btn btn-secondary" onclick="openQuickChatWithRole('BOSS')">Бастыққа жазу (ЛС)</button>
+            </div>
+          </div>
+        `;
+      } else if (role === "BOSS") {
+        document.getElementById("servicePanelTitle").innerText = "ПЧ Бастығының (Директор) басқару панелі";
+        document.getElementById("servicePanelSubtitle").innerText = "Барлық дистанцияның толық базасын бақылау, наряд пен больничныйларды бекіту, шеберлермен жеке байланыс.";
+        container.innerHTML = `
+          <div class="grid-2">
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Нарядтар мен Больничныйларды бекіту</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Жол шеберлері жолдаған №451 наряд-допусктарға цифрлық қол қою және жұмысшылардың емхана қағаздарын растау.
+              </p>
+              <a href="boss.html" class="btn btn-primary">Басқару кабинетіне кіру ➔</a>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-header">
+                <h3>Шеберлермен жедел личка</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                Учаскелер мен околотоктардың шеберлеріне тікелей жеке хабарлама жолдау.
+              </p>
+              <button class="btn btn-secondary" onclick="switchNetworkTab('colleagues')">Шеберлер тізімін ашу</button>
+            </div>
+          </div>
+        `;
+      } else if (role === "DISPATCHER") {
+        document.getElementById("servicePanelTitle").innerText = "Поезд Диспетчерінің (ДНЦ) басқару орталығы";
+        document.getElementById("servicePanelSubtitle").innerText = "Поезд қозғалысының кестесі мен қауіпсіздігі, нарядтарға «Технологиялық терезе» беру.";
+        container.innerHTML = `
+          <div class="glass-card">
+            <div class="card-header">
+              <h3>«Технологиялық терезе» және Жол қауіпсіздігі</h3>
+            </div>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+              Бастық бекіткен нарядтарды тексеріп, поезд қозғалысын реттеу арқылы бригадаға жұмыс бастауға рұқсат беріңіз.
+            </p>
+            <a href="dispatcher.html" class="btn btn-primary">Диспетчерлік Басқару Орталығына өту ➔</a>
+          </div>
+        `;
+      }
+    }
+
+    // --- Embedded Camera Checkin ---
+    async function startNetworkCamera() {
+      const video = document.getElementById("netCamVideo");
+      const overlay = document.getElementById("netCamOffOverlay");
+      try {
+        if (netMediaStream) {
+          netMediaStream.getTracks().forEach(t => t.stop());
+        }
+        netMediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        video.srcObject = netMediaStream;
+        overlay.style.display = "none";
+      } catch(err) {
+        console.warn("Net cam error:", err);
+        overlay.style.display = "block";
+      }
+    }
+
+    async function handleNetworkCheckin(actionType) {
+      const video = document.getElementById("netCamVideo");
+      let photoBase64 = null;
+
+      if (video && video.videoWidth) {
+        const c = document.getElementById("netCamCanvas");
+        c.width = video.videoWidth;
+        c.height = video.videoHeight;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(video, 0, 0, c.width, c.height);
+        photoBase64 = c.toDataURL("image/jpeg", 0.85);
+      }
+
+      const workerName = currentUser ? currentUser.full_name : "Қызметкер";
+      const userId = currentUser ? currentUser.id : null;
+
+      try {
+        await Api.checkIn({
+          worker_name: workerName,
+          user_id: userId,
+          photo_base64: photoBase64,
+          action_type: actionType,
+          checkpoint: "КПП ПЧ-13 (Бас өткізу орны)"
+        });
+
+        showToast(actionType === "CHECK_IN" ? "Жұмысқа келу сәтті тіркелді!" : "Жұмыстан кету сәтті тіркелді!", "success");
+        loadLiveFeed();
+      } catch(err) {
+        showToast("Тіркеу қатесі: " + err.message, "danger");
+      }
+    }
+
+    async function openQuickChatWithRole(targetRole) {
+      try {
+        const users = await Api.getChatUsers("", targetRole);
+        if (users && users.length > 0) {
+          const u = users[0];
+          openChatWith(u.id, u.full_name, formatRoleName(u.role));
+        } else {
+          showToast("Қызметкер табылмады", "warning");
+        }
+      } catch(e){
+        showToast("Қате: " + e.message, "danger");
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeJs(str) {
+      if (!str) return "";
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+  </script>
+</body>
+</html>
