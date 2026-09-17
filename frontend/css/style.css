@@ -4,7 +4,7 @@
    Supports Kazakh Cyrillic (ә, ғ, қ, ң, ө, ұ, ү, һ, і) & Russian Cyrillic
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=Russo+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   /* Fonts with native Cyrillic & Cyrillic Extended support */
@@ -57,14 +57,6 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 9999px;
-
-  /* Railway brand layer */
-  --font-display: 'Russo One', 'Inter', sans-serif;
-  --ink: #161616;
-  --rail: #ffc400;
-  --rail-dark: #e0a800;
-  --go: #1b7a3d;
-  --stop: #c8191b;
 }
 
 * {
@@ -763,168 +755,216 @@ tr:hover td {
 }
 
 /* ==========================================================================
-   RAILWAY BRAND LAYER — hard industrial look, no AI slop
-   Signal yellow + ink black + stencil type. Applied last, wins ties.
+   BRAND LAYER — строгий ведомственный стиль: спокойные тоны, крупный текст,
+   минимум декора. Легко читается людьми 40+.
    ========================================================================== */
 
-/* Hazard stripe utility */
-.rail-stripe {
-  height: 8px;
-  background: repeating-linear-gradient(-45deg, var(--ink) 0 14px, var(--rail) 14px 28px);
+body {
+  font-size: 15px;
 }
 
-/* Navbar: ink underline + stripe */
+/* Hazard stripe: приглушённая, тонкая — только как разделитель */
+.rail-stripe {
+  height: 4px;
+  background: var(--primary);
+  opacity: 0.85;
+}
+
+/* Navbar: белый, спокойный */
 .navbar {
-  border-bottom: 3px solid var(--ink);
-  position: sticky;
+  border-bottom: 1px solid var(--border-strong);
 }
 .navbar::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -7px;
-  height: 4px;
-  background: repeating-linear-gradient(-45deg, var(--ink) 0 14px, var(--rail) 14px 28px);
+  bottom: -2px;
+  height: 2px;
+  background: var(--primary);
+  opacity: 0.35;
 }
 
 .brand-badge {
-  background: var(--rail);
-  color: var(--ink);
-  font-family: var(--font-display);
-  border: 2px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
-  letter-spacing: 1px;
+  background: var(--primary);
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-weight: 800;
+  border: none;
+  box-shadow: none;
+  letter-spacing: 0.5px;
 }
 
 .brand-info h1 {
-  font-family: var(--font-display);
-  letter-spacing: 0.5px;
+  font-family: var(--font-main);
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
-/* Hard buttons */
+/* Кнопки: спокойные, крупные, без теней-вылетов */
 .btn {
-  font-family: var(--font-display);
-  letter-spacing: 0.5px;
-  border: 2px solid var(--ink);
+  font-family: var(--font-main);
+  font-weight: 700;
+  letter-spacing: 0;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  box-shadow: 3px 3px 0 var(--ink);
-  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  box-shadow: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 .btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
+  filter: brightness(0.96);
 }
 .btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
+  filter: brightness(0.92);
 }
 .btn:disabled {
   transform: none;
   box-shadow: none;
-  opacity: 0.55;
+  opacity: 0.6;
 }
 
 .btn-primary {
-  background: var(--rail);
-  color: var(--ink);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
 }
 .btn-primary:hover {
-  background: var(--rail-dark);
-  color: var(--ink);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #ffffff;
 }
 
 .btn-success {
-  background: var(--go);
-  border-color: var(--ink);
+  background: var(--success);
+  border-color: var(--success-hover);
   color: #ffffff;
+}
+.btn-success:hover {
+  background: var(--success-hover);
 }
 .btn-danger {
-  background: var(--stop);
-  border-color: var(--ink);
+  background: var(--danger);
+  border-color: var(--danger-hover);
   color: #ffffff;
 }
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
+.btn-secondary {
+  background: #ffffff;
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+.btn-lg {
+  font-size: 16px;
+  padding: 14px 20px;
+}
 
-/* Cards: hard frame */
+/* Карточки: тонкая рамка, мягкая тень */
 .card, .glass-card {
-  border: 2px solid var(--ink);
-  border-radius: 12px;
-  box-shadow: 5px 5px 0 rgba(22, 22, 22, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  animation: none;
 }
 .network-user-card, .colleague-card, .activity-feed-item {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border-color);
 }
 
-/* Badges: stencil plates */
+/* Бейджи: плоские, приглушённые */
 .badge {
-  font-family: var(--font-display);
-  font-size: 10.5px;
-  letter-spacing: 1px;
-  border: 2px solid var(--ink);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
   border-radius: 6px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
 }
+.badge-green { background: #e7f2e9; color: #236327; border-color: #bfe0c4; }
+.badge-red { background: #fbe9e9; color: #7f1d1d; border-color: #f0c4c4; }
+.badge-blue { background: #e8eef7; color: #1f456e; border-color: #c3d4ea; }
+.badge-yellow { background: #faf3e3; color: #8a5a00; border-color: #e8d9ae; }
+.badge-gray { background: #f1f3f5; color: #475569; border-color: #dde1e6; }
+.badge-purple { background: #eef0f4; color: #334155; border-color: #d3d9e2; }
 
-/* Inputs: hard frames */
+/* Поля: спокойные */
 .form-control {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
+  font-size: 15px;
+  padding: 10px 12px;
 }
 .form-control:focus {
-  outline: 3px solid var(--rail);
+  outline: 2px solid var(--primary);
   outline-offset: 0;
-  border-color: var(--ink);
+  border-color: var(--primary);
+}
+.form-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
-/* Tables header: ink plate */
+/* Шапка таблиц: спокойный сланец */
 .custom-table thead th {
-  font-family: var(--font-display);
-  letter-spacing: 0.5px;
-  background: var(--ink);
-  color: var(--rail);
-  border: none;
-  font-size: 12px;
+  font-family: var(--font-main);
+  font-weight: 700;
+  letter-spacing: 0;
+  background: #eef1f5;
+  color: var(--text-main);
+  border-bottom: 2px solid var(--border-strong);
+  font-size: 12.5px;
+}
+.custom-table td {
+  font-size: 14px;
 }
 
-/* Live dot blink */
+/* Точка эфира — спокойное мигание */
 @keyframes rail-blink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+  50% { opacity: 0.35; }
 }
 .live-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--stop);
-  border: 2px solid var(--ink);
-  animation: rail-blink 1.2s infinite;
+  background: var(--success);
+  border: none;
+  animation: rail-blink 2s infinite;
 }
 
-/* Camera scanline (go.html) */
+/* Скан-линия на камере — едва заметная */
 @keyframes rail-scan {
-  0% { top: 0; }
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
   50% { top: calc(100% - 3px); }
-  100% { top: 0; }
+  90% { opacity: 1; }
+  100% { top: 0; opacity: 0; }
 }
 .scanline {
   position: absolute;
   left: 0;
   right: 0;
-  height: 3px;
-  background: var(--rail);
-  box-shadow: 0 0 12px var(--rail);
-  animation: rail-scan 2.4s ease-in-out infinite;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: none;
+  animation: rail-scan 3s ease-in-out infinite;
   pointer-events: none;
 }
 
-/* Entrance animation for cards */
+/* Появление карточек отключено — ничего не прыгает */
 @keyframes rail-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
-}
-.card, .glass-card {
-  animation: rail-in 0.25s ease;
+  from { opacity: 1; }
+  to { opacity: 1; }
 }
 
 /* Ticker tape for the live feed header */

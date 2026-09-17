@@ -6,29 +6,31 @@
   <title>Өткізу бекеті | Digital Temirzhol</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    body { background: var(--ink); }
+    body { background: var(--bg-app); }
     .go-wrap { max-width: 520px; margin: 0 auto; padding: 0 0 32px; }
-    .go-head { background: #fff; border-bottom: 3px solid var(--ink); padding: 18px 20px 14px; }
-    .go-head h1 { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; }
+    .go-head { background: #fff; border-bottom: 2px solid var(--border-strong); padding: 20px 20px 16px; }
+    .go-head h1 { font-size: 22px; font-weight: 800; }
     .go-point {
-      font-family: var(--font-display); font-size: 15px; background: var(--ink); color: var(--rail);
-      display: inline-block; padding: 6px 12px; border-radius: 6px; margin-top: 8px; letter-spacing: 0.5px;
+      font-size: 14px; font-weight: 700; background: var(--primary-light); color: var(--primary);
+      display: inline-block; padding: 6px 12px; border-radius: 6px; margin-top: 8px;
+      border: 1px solid #c3d4ea;
     }
     .go-body { padding: 16px 16px 0; }
     .go-cam {
-      position: relative; background: #000; border: 3px solid var(--rail); border-radius: 12px;
+      position: relative; background: #0f172a; border: 1px solid var(--border-strong); border-radius: 10px;
       overflow: hidden; height: 320px; margin-bottom: 12px;
     }
     .go-cam video { width: 100%; height: 100%; object-fit: cover; }
     .go-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
-    .go-btns .btn { padding: 20px 8px; font-size: 17px; }
+    .go-btns .btn { padding: 20px 8px; font-size: 18px; }
     .go-result {
-      display: none; background: #fff; border: 3px solid var(--go); border-radius: 12px;
-      padding: 12px 16px; font-weight: 800; font-size: 15px; margin-bottom: 12px;
+      display: none; background: #fff; border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--success);
+      border-radius: 8px; padding: 12px 16px; font-weight: 700; font-size: 15px; margin-bottom: 12px;
     }
-    .go-result.err { border-color: var(--stop); }
+    .go-result.err { border-left-color: var(--danger); }
     .go-foot { text-align: center; margin-top: 14px; }
-    .go-foot a { color: var(--rail); font-size: 13px; font-weight: 700; }
+    .go-foot a { color: var(--primary); font-size: 14px; font-weight: 700; }
     @media (max-width: 480px) {
       .go-btns { grid-template-columns: 1fr; }
       .go-cam { height: 260px; }
@@ -46,8 +48,8 @@
     </div>
 
     <div class="go-body">
-      <div id="goLoginBar" style="display:none; background:var(--rail); border:3px solid #000; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-weight:700; font-size:13.5px;">
-        Өз атыңыздан өту үшін <a id="goLoginLink" href="login.html" style="color:#000; text-decoration:underline;">кіріңіз</a>
+      <div id="goLoginBar" style="display:none; background:#fff; border:1px solid var(--border-strong); border-left:4px solid var(--primary); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:14px;">
+        Өз атыңыздан өту үшін <a id="goLoginLink" href="login.html" style="color:var(--primary); font-weight:700;">кіріңіз</a>
       </div>
 
       <div class="go-cam">
@@ -56,7 +58,7 @@
         <div class="scanline"></div>
         <div style="position:absolute; top:10px; left:12px; display:flex; align-items:center; gap:8px;">
           <span class="live-dot"></span>
-          <span style="color:#fff; font-family:var(--font-display); font-size:12px; letter-spacing:1px;">КАМЕРА</span>
+          <span style="color:#fff; font-size:12px; font-weight:700;">КАМЕРА</span>
         </div>
       </div>
 
