@@ -135,6 +135,13 @@ const Api = {
     const query = dateStr ? `?target_date=${dateStr}` : "";
     return this.request(`/api/attendance/timesheet${query}`);
   },
+  getJournal(dateStr, checkpointId = null) {
+    const q = new URLSearchParams();
+    if (dateStr) q.append("target_date", dateStr);
+    if (checkpointId) q.append("checkpoint_id", checkpointId);
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    return this.request(`/api/attendance/journal${qs}`);
+  },
   downloadTimesheetCsv(dateStr) {
     const q = dateStr ? `?target_date=${encodeURIComponent(dateStr)}` : "";
     window.open(`${API_BASE}/api/attendance/export-csv${q}`, "_blank");
@@ -192,8 +199,9 @@ const Api = {
   },
 
   // Kiosk & Notifications
-  getKioskToken() {
-    return this.request("/api/kiosk/token");
+  getKioskToken(checkpointId = null) {
+    const q = checkpointId ? `?checkpoint_id=${encodeURIComponent(checkpointId)}` : "";
+    return this.request(`/api/kiosk/token${q}`);
   },
   getNotifications(role) {
     return this.request(`/api/kiosk/notifications?role=${role || "BOSS"}`);
@@ -211,8 +219,32 @@ const Api = {
     return this.request(`/api/audit/list${qs}`);
   },
 
+  // Work points (dispatcher-managed checkpoints & sections)
+  getWorkPoints(kind = "", activeOnly = false) {
+    const q = new URLSearchParams();
+    if (kind) q.append("kind", kind);
+    if (activeOnly) q.append("active_only", "true");
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    return this.request(`/api/workpoints${qs}`);
+  },
+  createWorkPoint(payload) {
+    return this.request("/api/workpoints", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  updateWorkPoint(id, payload) {
+    return this.request(`/api/workpoints/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  },
+  deleteWorkPoint(id) {
+    return this.request(`/api/workpoints/${id}`, { method: "DELETE" });
+  },
   // Roster (Live presence: who is present, who is absent)
-  getRoster(params = {}) {    const q = new URLSearchParams();
+  getRoster(params = {}) {
+    const q = new URLSearchParams();
     if (params.role) q.append("role", params.role);
     if (params.master_id) q.append("master_id", params.master_id);
     if (params.query) q.append("query", params.query);

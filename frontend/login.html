@@ -172,6 +172,13 @@
   <script>
     let activeResetIdentifier = "";
 
+    // ?next=checkin.html%3Fk%3D... — return here after login (QR flow)
+    function safeNext() {
+      const n = new URLSearchParams(window.location.search).get("next") || "";
+      if (/^[a-z0-9_-]+\.html(\?.*)?$/i.test(n)) return n;
+      return "index.html";
+    }
+
     async function doLogin(u, p) {
       const btn = document.getElementById("btnLogin");
       btn.disabled = true;
@@ -179,8 +186,9 @@
         const res = await Api.login(u, p);
         Api.setUser(res.user, res.access_token);
         showToast("Сәтті кірдіңіз!", "success");
+        const target = safeNext();
         setTimeout(() => {
-          window.location.href = "index.html";
+          window.location.href = target;
         }, 400);
       } catch (err) {
         showToast("Қате: " + err.message, "danger");
@@ -271,8 +279,9 @@
         }
         showToast("Құпиясөз сәтті жаңартылды! Жүйеге кірудесіз...", "success");
         closeResetModal();
+        const target = safeNext();
         setTimeout(() => {
-          window.location.href = "index.html";
+          window.location.href = target;
         }, 500);
 
       } catch (err) {

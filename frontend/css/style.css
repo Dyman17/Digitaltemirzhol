@@ -669,4 +669,89 @@ tr:hover td {
   box-shadow: var(--shadow-sm);
 }
 
+/* ==========================================================================
+   Mobile optimization (phones open check-in via QR — must work one-handed)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  /* Navbar compresses: brand short, actions scroll horizontally */
+  .navbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .brand-info p {
+    display: none;
+  }
+  .brand-info h1 {
+    font-size: 16px;
+  }
+  .nav-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    gap: 8px;
+  }
+  .nav-link {
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .main-container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* All grids collapse to one column */
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Check-in action buttons stack full-width for thumbs */
+  .checkin-actions {
+    grid-template-columns: 1fr !important;
+  }
+  .checkin-actions .btn-lg {
+    padding: 16px 12px;
+    font-size: 15px;
+  }
+
+  /* Camera shorter so buttons stay visible without scrolling */
+  .camera-box {
+    height: 240px;
+  }
+
+  /* No iOS auto-zoom on inputs */
+  .form-control {
+    font-size: 16px;
+  }
+
+  /* Tables: smaller text, wrapper already scrolls */
+  .custom-table th, .custom-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  /* Modals become full-screen sheets */
+  .modal-box {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 12px 12px 0 0;
+    max-height: 92vh;
+  }
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .card, .glass-card {
+    padding: 14px;
+  }
+
+  .stat-val {
+    font-size: 20px;
+  }
+}
+
 

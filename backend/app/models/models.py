@@ -152,7 +152,6 @@ class PasswordResetCode(Base):
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-
 class AuditLog(Base):
     """Unified event journal: who did what and when (общая таблица событий)."""
 
@@ -166,5 +165,19 @@ class AuditLog(Base):
     entity = Column(String(20), nullable=True)  # naryad | leave | user | attendance
     entity_id = Column(Integer, nullable=True)
     detail = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WorkPoint(Base):
+    """Managed by dispatcher: checkpoints (КПП, used by QR check-in flow)
+    and track sections (участки/перегоны, shown on the monitoring board)."""
+
+    __tablename__ = "work_points"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False)  # e.g. "КПП ПЧ-13", "Перегон Алматы-1 — Бурундай"
+    kind = Column(String(20), nullable=False, default="checkpoint")  # checkpoint | section
+    location = Column(String(200), nullable=True)  # free note: км, ПК, станция
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

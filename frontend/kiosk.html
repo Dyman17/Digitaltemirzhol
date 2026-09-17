@@ -24,6 +24,12 @@
     </div>
 
     <div class="card" style="margin-bottom: 20px;">
+      <div style="margin-bottom: 12px;">
+        <label class="form-label" style="text-align:left; display:block; margin-bottom:6px;">Қай бекеттің экраны?</label>
+        <select id="checkpointSelect" class="form-control" onchange="refreshQr()">
+          <option value="">Жүктелуде...</option>
+        </select>
+      </div>
       <div id="qrBox" style="display: flex; justify-content: center; padding: 12px; min-height: 280px; align-items: center;">
         <span style="color: var(--text-muted); font-size: 13px;">QR жүктелуде...</span>
       </div>
@@ -54,31 +60,54 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
     let countdownTimer = null;
+    let refreshTimer = null;
 
-    function checkinUrl(token) {
+    function checkinUrl(token, checkpointId) {
       const base = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
-      return `${base}checkin.html?k=${encodeURIComponent(token)}`;
+      let url = `${base}checkin.html?k=${encodeURIComponent(token)}`;
+      if (checkpointId) url += `&c=${encodeURIComponent(checkpointId)}`;
+      return url;
+    }
+
+    async function loadCheckpointOptions() {
+      const sel = document.getElementById("checkpointSelect");
+      try {
+        const points = await Api.getWorkPoints("checkpoint", true);
+        if (!points.length) {
+          sel.innerHTML = `<option value="">КПП (әдепкі)</option>`;
+          return;
+        }
+        sel.innerHTML = points.map(p =>
+          `<option value="${p.id}">${p.name}${p.location ? " • " + p.location : ""}</option>`
+        ).join("");
+      } catch (err) {
+        sel.innerHTML = `<option value="">КПП (әдепкі)</option>`;
+      }
     }
 
     async function refreshQr() {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      const sel = document.getElementById("checkpointSelect");
+      const cid = sel ? sel.value : "";
       try {
-        const data = await Api.request("/api/kiosk/token");
+        const data = await Api.getKioskToken(cid || null);
         const box = document.getElementById("qrBox");
         box.innerHTML = "";
         new QRCode(box, {
-          text: checkinUrl(data.token),
+          text: checkinUrl(data.token, data.checkpoint_id || cid),
           width: 256,
           height: 256,
           correctLevel: QRCode.CorrectLevel.M
         });
-        document.getElementById("tokenLabel").textContent = data.token;
+        document.getElementById("tokenLabel").textContent =
+          (data.checkpoint_name ? data.checkpoint_name + " • " : "") + data.token;
         startCountdown(data.expires_in || 30);
         // Refresh right when the token rotates
-        setTimeout(refreshQr, Math.max((data.expires_in || 30) * 1000, 5000));
+        refreshTimer = setTimeout(refreshQr, Math.max((data.expires_in || 30) * 1000, 5000));
       } catch (err) {
         document.getElementById("qrBox").innerHTML =
           `<span style="color: var(--danger, #991b1b); font-size: 13px;">Серверге қосылу жоқ: ${err.message}</span>`;
-        setTimeout(refreshQr, 5000);
+        refreshTimer = setTimeout(refreshQr, 5000);
       }
     }
 
@@ -95,7 +124,10 @@
       }, 1000);
     }
 
-    window.addEventListener("DOMContentLoaded", refreshQr);
+    window.addEventListener("DOMContentLoaded", async () => {
+      await loadCheckpointOptions();
+      refreshQr();
+    });
   </script>
 </body>
 </html>

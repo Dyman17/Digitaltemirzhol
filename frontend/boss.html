@@ -201,6 +201,36 @@
           </div>
         </div>
       </div>
+
+      <!-- Daily event journal for the same date: who came/went, as a list -->
+      <div class="glass-card" style="margin-top: 20px;">
+        <div class="card-header">
+          <div>
+            <h3>Күнделікті кіру/шығу тізімі</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="bossJournalSummary">
+              Таңдалған күннің барлық фото-тіркеулері.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadBossJournal()">Жаңарту</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Уақыты</th>
+                <th>Фото</th>
+                <th>Қызметкер</th>
+                <th>Бекет</th>
+                <th>Әрекет</th>
+              </tr>
+            </thead>
+            <tbody id="bossJournalTable">
+              <tr><td colspan="5" style="text-align:center;">Жүктелуде...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 4: MASTERS DIRECT PM & FULL DATABASE -->
@@ -617,7 +647,6 @@
         const data = await Api.getTimesheet(selectedDate);
         const tbody = document.getElementById("timesheetTable");
         document.getElementById("statPresent").innerText = data.records.filter(r => r.check_in !== "—").length;
-
         tbody.innerHTML = data.records.map(r => {
           let statusBadge = `<span class="badge badge-blue">${r.status}</span>`;
           if (r.status.includes("БОЛЬНИЧНЫЙ")) {
@@ -640,8 +669,38 @@
             </tr>
           `;
         }).join("");
+        loadBossJournal(selectedDate);
       } catch (err) {
         console.warn("Timesheet error:", err);
+      }
+    }
+
+    async function loadBossJournal(dateVal) {
+      const selectedDate = dateVal || document.getElementById("timesheetDate").value;
+      const tbody = document.getElementById("bossJournalTable");
+      if (!tbody) return;
+      try {
+        const data = await Api.getJournal(selectedDate);
+        document.getElementById("bossJournalSummary").innerText =
+          `${data.date}: келді — ${data.check_ins}, кетті — ${data.check_outs}, барлығы — ${data.total} оқиға.`;
+        if (!data.records.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Бұл күні тіркеулер жоқ</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.records.map(r => {
+          const isIn = r.action_type === "CHECK_IN";
+          const photo = r.photo_url ? Api.getFileUrl(r.photo_url) : "";
+          return `
+            <tr>
+              <td style="font-family:var(--font-mono); white-space:nowrap;">${r.time}</td>
+              <td>${photo ? `<img src="${photo}" class="table-photo" alt="">` : `<span style="color:var(--text-muted);">—</span>`}</td>
+              <td><strong>${escapeHtml(r.full_name)}</strong><br/><small style="color:var(--text-muted);">${escapeHtml(r.emp_num || "")}</small></td>
+              <td style="font-size:12px;">${escapeHtml(r.checkpoint || "")}</td>
+              <td>${isIn ? `<span class="badge badge-green">КЕЛДІ</span>` : `<span class="badge badge-red">КЕТТІ</span>`}</td>
+            </tr>`;
+        }).join("");
+      } catch (err) {
+        console.warn("Boss journal error:", err);
       }
     }
 

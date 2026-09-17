@@ -53,6 +53,7 @@ class AttendanceCheckIn(BaseModel):
     face_image_base64: Optional[str] = None
     action_type: str  # CHECK_IN or CHECK_OUT
     checkpoint: Optional[str] = "КПП ПЧ-13 (Бас проходная)"
+    checkpoint_id: Optional[int] = None  # КПП from dispatcher-managed work points (?c=...)
     kiosk_token: Optional[str] = None  # dynamic QR token from the entrance screen (?k=...)
 
 class AttendanceResponse(BaseModel):

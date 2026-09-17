@@ -47,6 +47,9 @@ KIOSK_TOKEN_TTL = int(os.getenv("KIOSK_TOKEN_TTL", "30"))
 # the timesheet would be 5-6 hours off in production.
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Almaty")
 
+# Minimum seconds between CHECK_IN and CHECK_OUT (anti double-tap / spam)
+MIN_CHECKOUT_SECONDS = int(os.getenv("MIN_CHECKOUT_SECONDS", "15"))
+
 # Outgoing mail for password reset (plain SMTP via stdlib; any provider works).
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

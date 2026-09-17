@@ -6,7 +6,7 @@ from typing import Optional
 from app.core.database import get_db
 from app.core.security import get_current_user_optional
 from app.core.timeutils import now_local, today_start_local
-from app.models.models import Attendance, User, Notification, Leave
+from app.models.models import Attendance, User, Notification, Leave, WorkPoint
 from app.schemas.schemas import AttendanceCheckIn
 from app.services.excel_service import generate_timesheet_csv
 from app.routers.kiosk import is_valid_kiosk_token, CHECKPOINT_NAME
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 
 import base64
 import uuid
-from app.core.config import ATTENDANCE_DIR
+from app.core.config import ATTENDANCE_DIR, MIN_CHECKOUT_SECONDS
 
 @router.post("/check-in")
 def record_attendance(
@@ -53,6 +53,17 @@ def record_attendance(
             detail="QR-код ескірген: кіреберістегі экрандағы жаңа кодты сканерлеңіз",
         )
 
+    # 3. Resolve checkpoint from dispatcher-managed work points (?c=...).
+    checkpoint_name = (data.checkpoint or "").strip() or CHECKPOINT_NAME
+    if data.checkpoint_id:
+        cp = db.query(WorkPoint).filter(
+            WorkPoint.id == data.checkpoint_id,
+            WorkPoint.kind == "checkpoint",
+            WorkPoint.is_active == True,  # noqa: E712
+        ).first()
+        if cp:
+            checkpoint_name = cp.name
+
     # 3. Save captured photo to the attendance archive (not the face registry)
     raw_photo = data.photo_base64 or data.face_image_base64
     photo_url = user.photo_url if user else None
@@ -78,6 +89,29 @@ def record_attendance(
     action_kz = "жұмысқа келді" if data.action_type == "CHECK_IN" else "жұмыстан кетті"
     time_str = now.strftime("%H:%M")
 
+    # 4. Anti-spam: CHECK_OUT is accepted only MIN_CHECKOUT_SECONDS after
+    # the last CHECK_IN of the same person (prevents accidental double taps).
+    if data.action_type == "CHECK_OUT":
+        last_in = None
+        if user is not None:
+            last_in = db.query(Attendance).filter(
+                Attendance.user_id == user.id,
+                Attendance.action_type == "CHECK_IN",
+            ).order_by(Attendance.timestamp.desc()).first()
+        elif raw_name:
+            last_in = db.query(Attendance).filter(
+                Attendance.worker_name.ilike(f"%{raw_name}%"),
+                Attendance.action_type == "CHECK_IN",
+            ).order_by(Attendance.timestamp.desc()).first()
+        if last_in and last_in.timestamp:
+            elapsed = (now - last_in.timestamp).total_seconds()
+            if 0 <= elapsed < MIN_CHECKOUT_SECONDS:
+                wait = int(MIN_CHECKOUT_SECONDS - elapsed) + 1
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Тым жылдам: шығу {wait} секундтан кейін болады (кемінде {MIN_CHECKOUT_SECONDS} сек)",
+                )
+
     if verified_identity:
         note = "JWT-пен расталған тұлға" + (" + QR расталды" if qr_ok else "")
     elif qr_ok:
@@ -85,24 +119,24 @@ def record_attendance(
     else:
         note = "Қолмен енгізілген (тұлға мен QR расталмаған)"
 
-    # 4. Save attendance record directly into database
+    # 5. Save attendance record directly into database
     record = Attendance(
         user_id=user.id if user else None,
         worker_name=final_name,
         photo_url=photo_url,
         action_type=data.action_type,
         timestamp=now,
-        checkpoint=data.checkpoint or CHECKPOINT_NAME,
+        checkpoint=checkpoint_name,
         note=note
     )
     db.add(record)
 
-    # 5. Boss notification
+    # 6. Boss notification
     notif = Notification(
         target_role="BOSS",
         user_id=user.id if user else None,
         title="📸 Өткізу бекетінен фото-фиксация",
-        message=f"{final_name} ({final_pos}) сағат {time_str}-де {action_kz}.",
+        message=f"{final_name} ({final_pos}) сағат {time_str}-де {action_kz} ({checkpoint_name}).",
         category="ATTENDANCE",
         created_at=now
     )
@@ -152,6 +186,58 @@ def get_recent_attendance(limit: int = 20, db: Session = Depends(get_db)):
             "checkpoint": r.checkpoint
         })
     return result
+
+@router.get("/journal")
+def get_journal(target_date: Optional[str] = None, checkpoint_id: Optional[int] = None,
+                db: Session = Depends(get_db)):
+    """Everybody who came/went on one calendar day, as a flat event list.
+    Used by BOSS and DISPATCHER journal tables. Date format: YYYY-MM-DD."""
+    from datetime import time as dtime
+
+    selected_date_str = target_date or now_local().strftime("%Y-%m-%d")
+    try:
+        selected = datetime.strptime(selected_date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Күн форматы: YYYY-MM-DD")
+    day_start = datetime.combine(selected, dtime.min)
+    day_end = datetime.combine(selected, dtime.max)
+
+    checkpoint_name = None
+    if checkpoint_id:
+        cp = db.query(WorkPoint).filter(WorkPoint.id == checkpoint_id).first()
+        if cp:
+            checkpoint_name = cp.name
+
+    q = db.query(Attendance).filter(
+        Attendance.timestamp >= day_start,
+        Attendance.timestamp <= day_end,
+    )
+    if checkpoint_name:
+        q = q.filter(Attendance.checkpoint == checkpoint_name)
+    records = q.order_by(Attendance.timestamp.asc()).all()
+
+    result = []
+    for r in records:
+        u = r.user
+        result.append({
+            "id": r.id,
+            "user_id": u.id if u else None,
+            "full_name": (u.full_name if u else r.worker_name) or "Қызметкер",
+            "position": (u.position if u else "Жұмысшы"),
+            "emp_num": (u.emp_num if u else "—"),
+            "photo_url": r.photo_url or (u.photo_url if u else None),
+            "action_type": r.action_type,
+            "time": r.timestamp.strftime("%H:%M"),
+            "timestamp": r.timestamp.strftime("%d.%m.%Y %H:%M:%S"),
+            "checkpoint": r.checkpoint,
+        })
+    return {
+        "date": selected_date_str,
+        "total": len(result),
+        "check_ins": sum(1 for x in result if x["action_type"] == "CHECK_IN"),
+        "check_outs": sum(1 for x in result if x["action_type"] == "CHECK_OUT"),
+        "records": result,
+    }
 
 @router.get("/timesheet")
 def get_timesheet(target_date: Optional[str] = None, db: Session = Depends(get_db)):

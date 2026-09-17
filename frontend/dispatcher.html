@@ -137,46 +137,89 @@
       </div>
     </div>
 
-    <!-- Simulated Track Sections Status (Мнемосхема) -->
-    <div class="glass-card">
-      <div class="card-header">
-        <h3>Учаскелердің ағымдағы қауіпсіздік мониторингі (Мнемосхема)</h3>
-        <span class="badge badge-green">СИГНАЛИЗАЦИЯ ҚАЛЫПТЫ</span>
+    <!-- Work Points Management (КПП точки + участки), dispatcher-owned reference -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+        <div>
+          <span class="badge badge-blue">ДИСПЕТЧЕР АНЫҚТАМАСЫ</span>
+          <h3 style="font-size: 17px; margin-top:4px;">Жұмыс нүктелері (КПП + Учаскелер)</h3>
+          <p style="font-size:12px; color:var(--text-muted);">
+            КПП нүктелері QR-чекинде қолданылады, учаскелер — мониторинг тақтасында.
+          </p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadWorkPoints()">Жаңарту</button>
       </div>
 
-      <div class="grid-3">
-        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="color:var(--text-main);">Участок №17 (42-48 км)</strong>
-            <span class="badge badge-green">АШЫҚ</span>
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div>
+          <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Өткізу бекеттері (КПП)</div>
+          <div id="checkpointList" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="color:var(--text-muted); font-size:13px;">Жүктелуде...</div>
           </div>
-          <div style="font-size:12px; color:var(--text-muted);">Перегон Алматы-1 — Бурундай</div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Қозғалыс: Жолаушылар пойызы №003</div>
         </div>
+        <div>
+          <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Учаскелер / Перегондар</div>
+          <div id="sectionList" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="color:var(--text-muted); font-size:13px;">Жүктелуде...</div>
+          </div>
+        </div>
+      </div>
 
-        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="color:var(--text-main);">Станция Алматы-2 (Путь №1)</strong>
-            <span class="badge badge-yellow">ЖҰМЫС АЙМАҒЫ</span>
-          </div>
-          <div style="font-size:12px; color:var(--text-muted);">Стрелкалық бағыттамалар</div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Жол жөндеу бригадасы</div>
+      <form onsubmit="handleAddWorkPoint(event)" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; padding-top:12px; border-top:1px solid var(--border-color);">
+        <div style="flex:2; min-width:200px;">
+          <label class="form-label">Атауы *</label>
+          <input type="text" id="wpName" class="form-control" placeholder="Мысалы: КПП ПЧ-13 (Шығыс) немесе Перегон ..." required>
         </div>
+        <div style="flex:1; min-width:140px;">
+          <label class="form-label">Түрі</label>
+          <select id="wpKind" class="form-control">
+            <option value="checkpoint">КПП (чекин)</option>
+            <option value="section">Участок (мониторинг)</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:140px;">
+          <label class="form-label">Орны (км, ПК)</label>
+          <input type="text" id="wpLocation" class="form-control" placeholder="42 км, ПК-4">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnAddWp">Қосу</button>
+      </form>
+    </div>
 
-        <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <strong style="color:var(--text-main);">Мостовой переход р. Или</strong>
-            <span class="badge badge-green">АШЫҚ</span>
-          </div>
-          <div style="font-size:12px; color:var(--text-muted);">Путевой пост 84 км</div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Қозғалыс: Жүк құрамы №2841</div>
+    <!-- Daily In/Out Journal (who came/went, any date) -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+      <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+        <div>
+          <h3>Кіру/Шығу журналы (по дням)</h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="journalSummary">
+            Бүгін кім келді, кім кетті — тізіммен.
+          </p>
         </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="date" id="journalDate" class="form-control" style="width:auto; padding:6px 12px;" onchange="loadJournal()">
+          <button class="btn btn-secondary btn-sm" onclick="loadJournal()">Жаңарту</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Уақыты</th>
+              <th>Фото</th>
+              <th>Қызметкер</th>
+              <th>Бекет</th>
+              <th>Әрекет</th>
+            </tr>
+          </thead>
+          <tbody id="journalTable">
+            <tr><td colspan="5" style="text-align:center;">Жүктелуде...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
   </main>
 
-  <script src="js/config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
@@ -201,11 +244,126 @@
         return;
       }
       // User capsule lives in the shared navbar (js/layout.js).
+      document.getElementById("journalDate").value = new Date().toISOString().split("T")[0];
       loadDispatcherRoster();
       loadDispatcherNaryads();
+      loadWorkPoints();
+      loadJournal();
       setInterval(loadDispatcherNaryads, 6000);
       setInterval(loadDispatcherRoster, 8000);
+      setInterval(() => { if (isTodaySelected()) loadJournal(false); }, 10000);
     });
+
+    function isTodaySelected() {
+      const v = document.getElementById("journalDate").value;
+      return v === new Date().toISOString().split("T")[0];
+    }
+
+    // ---- Work points (dispatcher-managed reference) ----
+    async function loadWorkPoints() {
+      try {
+        const points = await Api.getWorkPoints();
+        const cps = points.filter(p => p.kind === "checkpoint");
+        const secs = points.filter(p => p.kind === "section");
+        document.getElementById("checkpointList").innerHTML = cps.length
+          ? cps.map(workPointRow).join("")
+          : `<div style="color:var(--text-muted); font-size:13px;">КПП нүктелері жоқ</div>`;
+        document.getElementById("sectionList").innerHTML = secs.length
+          ? secs.map(workPointRow).join("")
+          : `<div style="color:var(--text-muted); font-size:13px;">Учаскелер жоқ</div>`;
+      } catch (err) {
+        console.error("WorkPoints error:", err);
+      }
+    }
+
+    function workPointRow(p) {
+      const badge = p.is_active
+        ? `<span class="badge badge-green">БЕЛСЕНДІ</span>`
+        : `<span class="badge badge-gray">ӨШІРУЛІ</span>`;
+      return `
+        <div style="display:flex; align-items:center; gap:10px; background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;">
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:13.5px;">${escapeHtml(p.name)}</div>
+            ${p.location ? `<div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(p.location)}</div>` : ""}
+          </div>
+          ${badge}
+          <button class="btn btn-secondary btn-sm" onclick="toggleWorkPoint(${p.id}, ${p.is_active ? "false" : "true"})">
+            ${p.is_active ? "Өшіру" : "Қосу"}
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="deleteWorkPoint(${p.id})" title="Жою">✕</button>
+        </div>`;
+    }
+
+    async function handleAddWorkPoint(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnAddWp");
+      btn.disabled = true;
+      try {
+        await Api.createWorkPoint({
+          name: document.getElementById("wpName").value.trim(),
+          kind: document.getElementById("wpKind").value,
+          location: document.getElementById("wpLocation").value.trim()
+        });
+        document.getElementById("wpName").value = "";
+        document.getElementById("wpLocation").value = "";
+        showToast("Нүкте қосылды", "success");
+        loadWorkPoints();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function toggleWorkPoint(id, active) {
+      try {
+        await Api.updateWorkPoint(id, { is_active: active });
+        loadWorkPoints();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+
+    async function deleteWorkPoint(id) {
+      if (!confirm("Осы нүктені жою керек пе?")) return;
+      try {
+        await Api.deleteWorkPoint(id);
+        showToast("Нүкте жойылды", "success");
+        loadWorkPoints();
+      } catch (err) {
+        showToast("Қате: " + err.message, "danger");
+      }
+    }
+
+    // ---- Daily in/out journal ----
+    async function loadJournal(showError = true) {
+      const dateVal = document.getElementById("journalDate").value
+        || new Date().toISOString().split("T")[0];
+      const tbody = document.getElementById("journalTable");
+      try {
+        const data = await Api.getJournal(dateVal);
+        document.getElementById("journalSummary").innerText =
+          `${data.date}: келді — ${data.check_ins}, кетті — ${data.check_outs}, барлығы — ${data.total} оқиға.`;
+        if (!data.records.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Бұл күні тіркеулер жоқ</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.records.map(r => {
+          const isIn = r.action_type === "CHECK_IN";
+          const photo = r.photo_url ? Api.getFileUrl(r.photo_url) : "";
+          return `
+            <tr>
+              <td style="font-family:var(--font-mono); white-space:nowrap;">${r.time}</td>
+              <td>${photo ? `<img src="${photo}" class="table-photo" alt="">` : `<span style="color:var(--text-muted);">—</span>`}</td>
+              <td><strong>${escapeHtml(r.full_name)}</strong><br/><small style="color:var(--text-muted);">${escapeHtml(r.emp_num || "")}</small></td>
+              <td style="font-size:12px;">${escapeHtml(r.checkpoint || "")}</td>
+              <td>${isIn ? `<span class="badge badge-green">КЕЛДІ</span>` : `<span class="badge badge-red">КЕТТІ</span>`}</td>
+            </tr>`;
+        }).join("");
+      } catch (err) {
+        if (showError) showToast("Қате: " + err.message, "danger");
+      }
+    }
 
     async function loadDispatcherRoster() {
       try {

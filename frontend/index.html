@@ -174,14 +174,17 @@
             </p>
           </div>
 
-          <!-- Live Checkins Stream Header -->
+          <!-- Live Checkins Stream (collapsible to save space) -->
           <div class="glass-card" style="margin-bottom: 20px;">
-            <div class="card-header">
+            <div class="card-header" style="cursor:pointer;" onclick="toggleLiveFeed()">
               <h3 style="font-size: 15px;">Өткізу бекетінен тікелей фото-ағын (КПП Фото-чекин)</h3>
-              <button class="btn btn-secondary btn-sm" onclick="loadLiveFeed()">Жаңарту</button>
+              <span style="display:flex; gap:8px; align-items:center;">
+                <span class="badge badge-blue" id="liveFeedCount" style="display:none;">0</span>
+                <button class="btn btn-secondary btn-sm" id="liveFeedToggleBtn" onclick="event.stopPropagation(); toggleLiveFeed()">Ашу ▾</button>
+              </span>
             </div>
 
-            <div id="liveFeedContainer" style="display:flex; flex-direction:column; gap:12px;">
+            <div id="liveFeedContainer" style="display:none; flex-direction:column; gap:12px;">
               <div style="text-align:center; padding:24px; color:var(--text-muted);">Ауысымдар жүктелуде...</div>
             </div>
           </div>
@@ -359,9 +362,10 @@
         document.getElementById("guestWelcomeBanner").style.display = "block";
       }
 
-      loadLiveFeed();
+      updateLiveFeedCount();
       loadColleagues();
-      setInterval(loadLiveFeed, 6000);
+      setInterval(updateLiveFeedCount, 8000);
+      setInterval(() => { if (feedOpen) loadLiveFeed(); }, 6000);
     });
 
     function updateUserUI() {
@@ -439,15 +443,44 @@
       }
     }
 
-    // --- Live Feed ---
-    async function loadLiveFeed() {
+    // --- Live Feed (collapsed by default; count badge stays fresh) ---
+    let feedOpen = false;
+
+    function toggleLiveFeed() {
+      feedOpen = !feedOpen;
+      const box = document.getElementById("liveFeedContainer");
+      const btn = document.getElementById("liveFeedToggleBtn");
+      box.style.display = feedOpen ? "flex" : "none";
+      btn.innerText = feedOpen ? "Жасыру ▴" : "Ашу ▾";
+      if (feedOpen) loadLiveFeed();
+    }
+
+    async function updateLiveFeedCount() {
       try {
         const records = await Api.getRecentAttendance(8);
-        const container = document.getElementById("liveFeedContainer");
-        if (!records || records.length === 0) {
-          container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Бүгінге әзірге тіркеулер жоқ</div>`;
-          return;
-        }
+        const badge = document.getElementById("liveFeedCount");
+        badge.style.display = "inline-block";
+        badge.innerText = records.length;
+        if (feedOpen) renderLiveFeed(records);
+      } catch (err) {
+        console.warn("Feed error:", err);
+      }
+    }
+
+    async function loadLiveFeed() {
+      try {
+        renderLiveFeed(await Api.getRecentAttendance(8));
+      } catch (err) {
+        console.warn("Feed error:", err);
+      }
+    }
+
+    function renderLiveFeed(records) {
+      const container = document.getElementById("liveFeedContainer");
+      if (!records || records.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Бүгінге әзірге тіркеулер жоқ</div>`;
+        return;
+      }
 
         container.innerHTML = records.map(r => {
           const isCheckIn = r.action_type === "CHECK_IN";
@@ -467,9 +500,6 @@
             </div>
           `;
         }).join("");
-      } catch(err) {
-        console.warn("Feed error:", err);
-      }
     }
 
     // --- Colleagues Directory ---
